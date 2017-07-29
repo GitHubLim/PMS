@@ -10,27 +10,32 @@ int main(void) {
 
 	VideoCapture video(FILENAME);
 
-	//Video is not open
-	if (!video.isOpened())
-		cout << "Could not open video file." << endl;
-
+	//Error in opening the video input
+	if (!video.isOpened()) {
+		cerr << "Unable to open video file: " << FILENAME << endl;
+		exit(EXIT_FAILURE);
+	}
 
 	//VIDEO 320 X 240 
 	video.set(CAP_PROP_FRAME_WIDTH, 320);
 	video.set(CAP_PROP_FRAME_HEIGHT, 240);
 
-	Mat frame, houghFrame, kmeansFrame, ppFrame;
+	Mat frame, houghFrame, kmeansFrame, ppFrame, background, mask;
 	int flag = 0;
+
+	//Background frame
+	video >> background;
+	mask = preMasking(background);
+	background = preprocessing(background, mask);
+	
 	//HSV Trackbar
 	//namedWindow("찾을 색범위 설정", CV_WINDOW_AUTOSIZE);
 
 	//트랙바에서 사용되는 변수 초기화 
 	/*int LowH = LOWH;
 	int HighH = HIGHH;
-
 	int LowS = LOWS;
 	int HighS = HIGHS;
-
 	int LowV = LOWV;
 	int HighV = HIGHV;*/
 
@@ -44,11 +49,12 @@ int main(void) {
 	//cvCreateTrackbar("LowV", "찾을 색범위 설정", &LowV, 255); //Value (0 - 255)
 	//cvCreateTrackbar("HighV", "찾을 색범위 설정", &HighV, 255);
 
+
 	//MAIN LOOP
 	while (true) {
 		video >> frame;
 
-		resize(frame, frame, Size(800, 600), 0, 0, CV_INTER_LINEAR);
+		//resize(frame, frame, Size(800, 600), 0, 0, CV_INTER_LINEAR);
 
 		//Rotate
 		//Point2f src_center(frame.cols / 2.0F, frame.rows / 2.0F);
@@ -80,13 +86,21 @@ int main(void) {
 
 
 		/*rectangle(frame, Point(left, top), Point(left + width, top + height),
-			Scalar(0, 0, 255), 1);*/
+		Scalar(0, 0, 255), 1);*/
+
 		
+
 		//수동으로 위치확인
-		frame = drawCircle(frame);
-		
+		//frame = drawCircle(frame);
+
 		//전처리
-		frame = preprocessing(frame);
+		frame = preprocessing(frame, mask);
+
+		//차영상
+		Mat foreground = diffFrame(background, frame);
+
+		//Labeling 
+		makeLabeling(frame, foreground);
 
 		//FPS 
 		string fps = to_string((int)video.get(CV_CAP_PROP_FPS));
@@ -95,11 +109,58 @@ int main(void) {
 		//frame = carHaarCascadeFun(frame);
 
 		//HoughLine
-		frame = houghLine(frame);
+		//frame = houghLine(frame);
 		/*Mat image = imread("test2.PNG", 1);
 		frame = houghLine(image)*/;
 
+		//Find object 
+		clock_t begin = clock();
+		int count = 0;
+		
+		for (int y = 0; y < foreground.rows; y++) {
+			for (int x = 0; x < foreground.cols; x++) {
+				
+				//Mask의 값이 255일경우 
+				if ((int)foreground.at<uchar>(y, x)){
+					count++;
+					int label = (int)foreground.at<uchar>(y, x);
+					//cout << "X :" << x << "Y: " << y << endl;
+					//circle(frame, Point(x,y), 10, Scalar(0, 0, 255));
+					//1.Object 추출
+					Object object;
+					object.setStartPoint(x, y);
+					findObjectFun(x, y, -1, &object, &foreground);
+
+					Point sPoint, ePoint;
+					sPoint = object.getStartPoint();
+					ePoint = object.getEndPoint();
+
+					/*cout << "[SP] x :" << sPoint.x << " y : " << sPoint.y << endl;
+					cout << "[EP] x :" << ePoint.x << " y : " << ePoint.y << endl;*/
+
+					//2.Object가 Car인지 판별
+
+					//CODE 만들기...
+					//
+
+					// 영역 1000 미만 버리기
+					/*if (object.getExtent() > MINOBJECTSIZE) {
+						circle(frame, sPoint, 10, Scalar(0, 0, 255));
+						rectangle(frame, sPoint, ePoint, Scalar(0, 0, 255), 1);
+					}*/
+
+				}
+			}
+		}
+		cout << count << endl;
+		clock_t end = clock();
+
+		//cout << "Algorithm 수행시간 : " << (float)(end - begin) / CLOCKS_PER_SEC << endl;
+		
+
 		imshow("PMS", frame);
+		imshow("FOREGROUND", foreground);
+		imshow("BACKGROUND", background);
 		//imshow("이진화 영상", img_binary);
 
 		//mouse call back 

@@ -7,7 +7,7 @@
 #include <time.h>
 #include <vector>
 
-#define FILENAME "sunny1.mp4"
+#define FILENAME "rainy2.mp4"
 #define ESC 27
 #define DELAYMILL 20
 #define PI 3.14159265
@@ -21,6 +21,8 @@
 #define LOWV 31
 #define HIGHV 255
 
+#define SCALEFIRST 9
+#define SCALESECOND 39
 #define CARCASCADENAME "C:\\opencv\\build\\etc\\haarcascades\\haarcascade_cars.xml"
 
 using namespace std;
@@ -31,7 +33,7 @@ typedef struct HoughLineInfo {
 	vector<double> dRho;
 }HoughLineInfo;
 
-//DO NOT USE FUNCTION
+
 Mat houghLine(Mat srcFrame) {
 
 	//Exception handling (Image is Empty)
@@ -44,7 +46,7 @@ Mat houghLine(Mat srcFrame) {
 	// 1.  Edge detection, e.g. using the Canny edge detector.
 	Mat edgeFrame;
 	GaussianBlur(srcFrame, srcFrame, Size(9, 9), 1.0);
-	Canny(srcFrame, edgeFrame, 100, 150);
+	Canny(srcFrame, edgeFrame, 50, 100);
 
 
 	//2. Mapping of edge points to the Hough space and storage in an accumulator
@@ -218,11 +220,11 @@ Mat preMasking(Mat srcFrame) {
 
 
 	//3. erode and dilate to binary frame
-	erode(binaryFrame, binaryFrame, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)));
-	dilate(binaryFrame, binaryFrame, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)));
+	erode(binaryFrame, binaryFrame, getStructuringElement(MORPH_ELLIPSE, Size(SCALEFIRST, SCALEFIRST)));
+	dilate(binaryFrame, binaryFrame, getStructuringElement(MORPH_ELLIPSE, Size(SCALESECOND, SCALESECOND)));
 
-	dilate(binaryFrame, binaryFrame, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)));
-	erode(binaryFrame, binaryFrame, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)));
+	dilate(binaryFrame, binaryFrame, getStructuringElement(MORPH_ELLIPSE, Size(SCALEFIRST, SCALEFIRST)));
+	erode(binaryFrame, binaryFrame, getStructuringElement(MORPH_ELLIPSE, Size(SCALESECOND, SCALESECOND)));
 
 	//4. not bitwise
 	bitwise_not(binaryFrame, binaryFrame);
@@ -230,11 +232,10 @@ Mat preMasking(Mat srcFrame) {
 	return binaryFrame;
 }
 
-Mat preprocessing(Mat srcFrame){
-	Mat dstFrame, mask;
+Mat preprocessing(Mat srcFrame, Mat mask){
+	Mat dstFrame;
 
 	//1. masking 
-	mask = preMasking(srcFrame);
 	srcFrame.copyTo(dstFrame, mask);
 
 	return dstFrame;
@@ -307,6 +308,72 @@ Mat drawCircle(Mat srcFrame) {
 	return srcFrame;
 }
 
+Mat diffFrame(Mat background, Mat srcFrame) {
+
+	Mat foreground, grayFrame;
+	
+	//1. Source Frame을 Gray Frame으로 변환
+	//cvtColor(srcFrame, grayFrame, COLOR_BayerRG2GRAY);
+	GaussianBlur(srcFrame, srcFrame, Size(5, 5), 0.5);
+
+	//2. 2개의 프레임의 차이의 절댓값 => foreground
+	absdiff(background, srcFrame, foreground);
+
+	//3. Erode, Dilate (미세한 잡음 제거 및 유사 영역 합침)
+	erode(foreground, foreground, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)));
+	dilate(foreground, foreground, getStructuringElement(MORPH_ELLIPSE, Size(25, 25)));
+
+	dilate(foreground, foreground, getStructuringElement(MORPH_ELLIPSE, Size(15, 15)));
+	erode(foreground, foreground, getStructuringElement(MORPH_ELLIPSE, Size(15, 15)));
+
+	//4. foreground의 threshold (150 - 255)
+	int thresholdValue = 100;
+	int maxBinaryValue = 255;
+
+	cvtColor(foreground, foreground, CV_BGR2GRAY);
+	threshold(foreground, foreground, thresholdValue, maxBinaryValue, THRESH_BINARY);
+
+	return foreground;
+}
+
+void makeLabeling(Mat srcFrame, Mat foreground) {
+	//1. make a labeling
+	Mat labelsFrame, stats, centroids;
+	int numOfLables = connectedComponentsWithStats(foreground, labelsFrame,
+		stats, centroids, 8, CV_32S);
+
+
+	//라벨링 된 이미지에 각각 직사각형으로 둘러싸기  
+	for (int j = 1; j < numOfLables; j++) {
+		int area = stats.at<int>(j, CC_STAT_AREA);
+		int left = stats.at<int>(j, CC_STAT_LEFT);
+		int top = stats.at<int>(j, CC_STAT_TOP);
+		int width = stats.at<int>(j, CC_STAT_WIDTH);
+		int height = stats.at<int>(j, CC_STAT_HEIGHT);
+
+		int x = centroids.at<double>(j, 0); //중심좌표
+		int y = centroids.at<double>(j, 1);
+
+		circle(srcFrame, Point(x, y), 5, Scalar(255, 0, 0), 1);
+
+		rectangle(srcFrame, Point(left, top), Point(left + width, top + height),
+			Scalar(0, 0, 255), 1);
+
+		putText(srcFrame, to_string(j), Point(left + 20, top + 20), FONT_HERSHEY_SIMPLEX,
+			1, Scalar(255, 0, 0), 2);
+	}
+}
+
+
+void mouseClickFun(int event, int x, int y, int flags, void* userdata) {
+
+	if (event == EVENT_LBUTTONDOWN) {
+		cout << "좌표 = (" << x << ", " << y << ")" << endl;
+	}
+}
+
+
+//DO NOT USE FUNCTION
 //Mat carHaarCascadeFun(Mat srcFrame) {
 //	//Mat dstFrame;
 //
@@ -331,11 +398,5 @@ Mat drawCircle(Mat srcFrame) {
 //
 //}
 
-void mouseClickFun(int event, int x, int y, int flags, void* userdata){
-
-	if (event == EVENT_LBUTTONDOWN){
-		cout << "좌표 = (" << x << ", " << y << ")" << endl;
-	}
-}
 
 #endif

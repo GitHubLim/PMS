@@ -95,6 +95,10 @@
       <SubSystem>Console</SubSystem>
       <AdditionalLibraryDirectories>$(OPENCV_DIR)\x86\vc12\lib</AdditionalLibraryDirectories>
       <AdditionalDependencies>opencv_ts300.lib;opencv_ts300d.lib;opencv_world300.lib;opencv_world300d.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <StackReserveSize>
+      </StackReserveSize>
+      <StackCommitSize>
+      </StackCommitSize>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -146,6 +150,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pms.h" />
+    <ClInclude Include="segmentation.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
