@@ -41,7 +41,6 @@ typedef struct HoughLineInfo {
 	vector<double> dRho;
 }HoughLineInfo;
 
-
 Mat houghLine(Mat srcFrame) {
 
 	//Exception handling (Image is Empty)
@@ -355,17 +354,17 @@ Mat diffFrame(Mat background, Mat srcFrame) {
 	
 	//1. Source Frame을 Gray Frame으로 변환
 	//cvtColor(srcFrame, grayFrame, COLOR_BayerRG2GRAY);
-	GaussianBlur(srcFrame, srcFrame, Size(5, 5), 0.5);
+	//GaussianBlur(srcFrame, srcFrame, Size(5, 5), 0.5);
 
 	//2. 2개의 프레임의 차이의 절댓값 => foreground
 	absdiff(background, srcFrame, foreground);
 
 	//3. Erode, Dilate (미세한 잡음 제거 및 유사 영역 합침)
-	erode(foreground, foreground, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)));
-	dilate(foreground, foreground, getStructuringElement(MORPH_ELLIPSE, Size(11, 11)));
+	erode(foreground, foreground, getStructuringElement(MORPH_ELLIPSE, Size(3, 3)));
+	dilate(foreground, foreground, getStructuringElement(MORPH_ELLIPSE, Size(21, 21)));
 
-	dilate(foreground, foreground, getStructuringElement(MORPH_ELLIPSE, Size(SCALETHIRD, SCALETHIRD)));
-	erode(foreground, foreground, getStructuringElement(MORPH_ELLIPSE, Size(SCALETHIRD-3, SCALETHIRD-3)));
+	//dilate(foreground, foreground, getStructuringElement(MORPH_ELLIPSE, Size(SCALETHIRD, SCALETHIRD)));
+	//erode(foreground, foreground, getStructuringElement(MORPH_ELLIPSE, Size(SCALETHIRD, SCALETHIRD)));
 
 	//4. foreground의 threshold (150 - 255)
 	int thresholdValue = 100;
@@ -377,12 +376,9 @@ Mat diffFrame(Mat background, Mat srcFrame) {
 	return foreground;
 }
 
-//Testing(**1)
 ParkingLotArea plArea1, plAreaWarp1;
 
 void drawWarpParkingLotFun(Mat srcFrame) {
-	//------- Warping ---------------
-
 	//임의의 주차장 좌표
 	Point topLeftWarp(247, 12);
 	Point bottomLeftWarp(255, 58);
@@ -414,8 +410,6 @@ void drawWarpParkingLotFun(Mat srcFrame) {
 
 void drawParkingLotFun(Mat srcFrame) {
 
-	vector<ParkingLotArea> ParkingLotAreaVec;
-
 	//임의의 주차장 좌표
 	Point topLeft(566, 316);
 	Point bottomLeft(589, 372);
@@ -432,71 +426,6 @@ void drawParkingLotFun(Mat srcFrame) {
 	topRightX = topRight.x, topRightY = topRight.y;
 	bottomRightX = bottomRight.x, bottomRightY = bottomRight.y;
 	
-	//영역 축소
-	//TopLeft, BottomLeft 조정
-	//int scale = 3;
-	//if (bottomLeft.x < topLeft.x) {
-	//	topLeftX -= (topLeft.x - bottomLeft.x) / scale;
-	//	bottomLeftX += (topLeft.x - bottomLeft.x) / scale;
-	//}else {
-	//	topLeftX += (bottomLeft.x - topLeft.x) / scale;
-	//	bottomLeftX -= (bottomLeft.x - topLeft.x) / scale;
-	//}
-
-	//topLeftY += (bottomLeft.y - topLeft.y) / scale;
-	//bottomLeftY -= (bottomLeft.y - topLeft.y) / scale;
-
-
-	////TopLeft, TopRight 조정
-	//if (topRight.y < topLeft.y) {
-	//	topLeftY -= (topLeft.y - topRight.y) / scale;
-	//	topRightY += (topLeft.y - topRight.y) / scale;
-	//}else {
-	//	topLeftY += (topRight.y - topLeft.y) / scale;
-	//	topRightY -= (topRight.y - topLeft.y) / scale;
-	//}
-
-	//topLeftX += (topRight.x - topLeft.x) / scale;
-	//topRightX -= (topRight.x - topLeft.x) / scale;
-
-	////TopRight, BottomRight 조정
-	//if (bottomRight.x < topRight.x) {
-	//	topRightX -= (topRight.x - bottomRight.x) / scale;
-	//	bottomRightX += (topRight.x - bottomRight.x) / scale;
-	//}
-	//else {
-	//	topRightX += (bottomRight.x - topRight.x) / scale;
-	//	bottomRightX -= (bottomRight.x - topRight.x) / scale;
-	//}
-
-	//topRightY += (bottomRight.y - topRight.y) / scale;
-	//bottomRightY -= (bottomRight.y - topRight.y) / scale;
-
-	////BottomLeft, BottomRight 조정
-	//if (bottomRight.y < bottomLeft.y) {
-	//	bottomLeftY -= (bottomLeft.y - bottomRight.y) / scale;
-	//	bottomRightY += (bottomLeft.y - bottomRight.y) / scale;
-	//}
-	//else {
-	//	bottomLeftY += (bottomRight.y - bottomLeft.y) / scale;
-	//	bottomRightY -= (bottomRight.y - bottomLeft.y) / scale;
-	//}
-
-	//bottomLeftX += (bottomRight.x - bottomLeft.x) / scale;
-	//bottomRightX -= (bottomRight.x - bottomLeft.x) / scale;
-
-	//Point topLeft1(topLeftX, topLeftY);
-	//Point bottomLeft1(bottomLeftX, bottomLeftY);
-	//Point topRight1(topRightX, topRightY);
-	//Point bottomRight1(bottomRightX, bottomRightY);
-
-	//
-	
-	//plArea11.setParkingLot(topLeft1, bottomLeft1, topRight1, bottomRight1); //step 1
-
-	
-	//Scalar lineColor1(255, 0, 0);
-
 	Scalar lineColor(0, 0, 255);
 	plArea1.setParkingLot(topLeft, bottomLeft, topRight, bottomRight);
 
@@ -504,17 +433,6 @@ void drawParkingLotFun(Mat srcFrame) {
 	line(srcFrame, plArea1.getBottomLeft(), plArea1.getBottomRight(), lineColor, 1);
 	line(srcFrame, plArea1.getBottomRight(), plArea1.getTopRight(), lineColor, 1);
 	line(srcFrame, plArea1.getTopRight(), plArea1.getTopLeft(), lineColor, 1);
-
-	/*circle(srcFrame, topLeft1, 4, drawParkingLot, 4);
-	circle(srcFrame, bottomLeft1, 4, drawParkingLot, 4);
-	circle(srcFrame, topRight1, 4, drawParkingLot, 4);
-	circle(srcFrame, bottomRight1, 4, drawParkingLot, 4);*/
-
-	/*cout << "AREA : " << plArea1.getArea() << endl;
-	cout << " AREA(20%) " << plArea1.getArea() * 0.2 
-		 << " AREA(50%) " << plArea1.getArea() * 0.5 
-		 << " AREA(80%) " << plArea1.getArea() * 0.8 << endl;
-*/
 }
 
 void decideParkingLot(Mat srcFrame, Mat foreground) {
@@ -569,6 +487,7 @@ void decideParkingLot(Mat srcFrame, Mat foreground) {
 		plAreaWarp1.setDecideParkingLot(isFull);
 	}
 }
+
 void makeLabeling(Mat srcFrame, Mat foreground) {
 	//1. make a labeling
 	Mat labelsFrame, stats, centroids;
@@ -600,13 +519,6 @@ void makeLabeling(Mat srcFrame, Mat foreground) {
 	}
 }
 
-void mouseClickFun(int event, int x, int y, int flags, void* userdata) {
-
-	if (event == EVENT_LBUTTONDOWN) {
-		cout << "좌표 = (" << x << ", " << y << ")" << endl;
-	}
-}
-
 //DO NOT USE FUNCTION
 //Mat carHaarCascadeFun(Mat srcFrame) {
 //	//Mat dstFrame;
@@ -632,5 +544,10 @@ void mouseClickFun(int event, int x, int y, int flags, void* userdata) {
 //
 //}
 
+void mouseClickFun(int event, int x, int y, int flags, void* userdata) {
 
+	if (event == EVENT_LBUTTONDOWN) 
+		cout << "좌표 = (" << x << ", " << y << ")" << endl;
+
+}
 #endif
