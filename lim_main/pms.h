@@ -5,11 +5,18 @@
 #include <iostream>
 #include <opencv2/opencv.hpp>
 #include <time.h>
+#include <Windows.h>
+#include <math.h>
+#include <tchar.h>
 #include <vector>
 #include "area.h"
 
 #define FILENAME "rainy2.mp4"
+#define GNUPLOTLOCATE _T("C:\\Program Files\\gnuplot\\bin\\wgnuplot.exe")
+
 #define ESC 27
+#define SPACE 32
+
 #define DELAYMILL 20
 #define PI 3.14159265
 #define DEG2RAD PI/180
@@ -22,16 +29,11 @@
 #define LOWV 31
 #define HIGHV 255
 
-
 #define SCALEFIRST 9
 #define SCALESECOND 19
 
 #define SCALETHIRD 37
 
-
-#define CARCASCADENAME "C:\\opencv\\build\\etc\\haarcascades\\haarcascade_cars.xml"
-
-#define MINAREA 4000
 
 using namespace std;
 using namespace cv;
@@ -360,8 +362,8 @@ Mat diffFrame(Mat background, Mat srcFrame) {
 	absdiff(background, srcFrame, foreground);
 
 	//3. Erode, Dilate (미세한 잡음 제거 및 유사 영역 합침)
-	erode(foreground, foreground, getStructuringElement(MORPH_ELLIPSE, Size(3, 3)));
-	dilate(foreground, foreground, getStructuringElement(MORPH_ELLIPSE, Size(21, 21)));
+	erode(foreground, foreground, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)));
+	dilate(foreground, foreground, getStructuringElement(MORPH_ELLIPSE, Size(19, 19)));
 
 	//dilate(foreground, foreground, getStructuringElement(MORPH_ELLIPSE, Size(SCALETHIRD, SCALETHIRD)));
 	//erode(foreground, foreground, getStructuringElement(MORPH_ELLIPSE, Size(SCALETHIRD, SCALETHIRD)));
@@ -376,118 +378,48 @@ Mat diffFrame(Mat background, Mat srcFrame) {
 	return foreground;
 }
 
-ParkingLotArea plArea1, plAreaWarp1;
-
-void drawWarpParkingLotFun(Mat srcFrame) {
-	//임의의 주차장 좌표
-	Point topLeftWarp(247, 12);
-	Point bottomLeftWarp(255, 58);
-	Point bottomRightWarp(294, 60);
-	Point topRightWarp(280, 10);
-
-	//임의의 주차장 좌표(STEP1)
-	int topLeftWarpX, topLeftWarpY, bottomLeftWarpX, bottomLeftWarpY;
-	int topRightWarpX, topRightWarpY, bottomRightWarpX, bottomRightWarpY;
-
-	//Initalization 
-	topLeftWarpX = topLeftWarp.x, topLeftWarpY = topLeftWarp.y;
-	bottomLeftWarpX = bottomLeftWarp.x, bottomLeftWarpY = bottomLeftWarp.y;
-	topRightWarpX = topRightWarp.x, topRightWarpY = topRightWarp.y;
-	bottomRightWarpX = bottomRightWarp.x, bottomRightWarpY = bottomRightWarp.y;
-
-	plAreaWarp1.setParkingLot(topLeftWarp, bottomLeftWarp, topRightWarp, bottomRightWarp);
-
+void drawParkingLotFun(Mat srcFrame, ParkingLotArea area) {
 	Scalar lineColor(0, 0, 255);
 
-	line(srcFrame, plAreaWarp1.getTopLeft(), plAreaWarp1.getBottomLeft(), lineColor, 1);
-	line(srcFrame, plAreaWarp1.getBottomLeft(), plAreaWarp1.getBottomRight(), lineColor, 1);
-	line(srcFrame, plAreaWarp1.getBottomRight(), plAreaWarp1.getTopRight(), lineColor, 1);
-	line(srcFrame, plAreaWarp1.getTopRight(), plAreaWarp1.getTopLeft(), lineColor, 1);
+	line(srcFrame, area.getTopLeft(), area.getBottomLeft(), lineColor, 1);
+	line(srcFrame, area.getBottomLeft(), area.getBottomRight(), lineColor, 1);
+	line(srcFrame, area.getBottomRight(), area.getTopRight(), lineColor, 1);
+	line(srcFrame, area.getTopRight(), area.getTopLeft(), lineColor, 1);
 
 	//주차장 주차 가능 확인
-	circle(srcFrame, plAreaWarp1.getParkingLotPoint(), 4, plAreaWarp1.getDecideParkingLot(), 4);
+	circle(srcFrame, area.getParkingLotPoint(), 4, area.getDecideParkingLot(), 4);
 }
 
-void drawParkingLotFun(Mat srcFrame) {
-
-	//임의의 주차장 좌표
-	Point topLeft(566, 316);
-	Point bottomLeft(589, 372);
-	Point topRight(612, 322);
-	Point bottomRight(636, 374);
-
-	//임의의 주차장 좌표(STEP1)
-	int topLeftX, topLeftY, bottomLeftX, bottomLeftY;
-	int topRightX, topRightY, bottomRightX, bottomRightY;
-
-	//Initalization 
-	topLeftX = topLeft.x, topLeftY = topLeft.y;
-	bottomLeftX = bottomLeft.x, bottomLeftY = bottomLeft.y;
-	topRightX = topRight.x, topRightY = topRight.y;
-	bottomRightX = bottomRight.x, bottomRightY = bottomRight.y;
-	
-	Scalar lineColor(0, 0, 255);
-	plArea1.setParkingLot(topLeft, bottomLeft, topRight, bottomRight);
-
-	line(srcFrame, plArea1.getTopLeft(), plArea1.getBottomLeft(), lineColor, 1);
-	line(srcFrame, plArea1.getBottomLeft(), plArea1.getBottomRight(), lineColor, 1);
-	line(srcFrame, plArea1.getBottomRight(), plArea1.getTopRight(), lineColor, 1);
-	line(srcFrame, plArea1.getTopRight(), plArea1.getTopLeft(), lineColor, 1);
-}
-
-void decideParkingLot(Mat srcFrame, Mat foreground) {
-	bool isFull;
-	isFull = true;
-
-	Mat labelsFrame, stats, centroids;
-	int numOfLables = connectedComponentsWithStats(foreground, labelsFrame,
-		stats, centroids, 8, CV_32S);
+void decideParkingLot(Mat srcFrame, ParkingLotArea* area, float flag){
 
 	//Detecting object 
-	for (int i = 1; i < numOfLables; i++) {
-		int area = stats.at<int>(i, CC_STAT_AREA);
-		int left = stats.at<int>(i, CC_STAT_LEFT);
-		int top = stats.at<int>(i, CC_STAT_TOP);
-		int width = stats.at<int>(i, CC_STAT_WIDTH);
-		int height = stats.at<int>(i, CC_STAT_HEIGHT);
+	bool isFull = false;
 
-		//object 중심 좌표
-		double x = centroids.at<double>(i, 0);
-		double y = centroids.at<double>(i, 1);
+	// Matrix 가로 세로
+	int matCols = srcFrame.cols;
+	int matRows = srcFrame.rows;
 
-		if (area > plAreaWarp1.getArea()*0.8) {
-			//min, max X 구하기
-			int minX = plAreaWarp1.getTopLeft().x;
-			int maxX = plAreaWarp1.getTopRight().x;
+	//영역넓이
+	int extent = 0;
 
-			if (minX > plAreaWarp1.getBottomLeft().x)
-				minX = plAreaWarp1.getBottomLeft().x;
-
-			if (maxX < plAreaWarp1.getBottomRight().x)
-				maxX = plAreaWarp1.getBottomRight().x;
-
-			//min, max Y 구하기
-			int minY = plAreaWarp1.getTopLeft().y;
-			int maxY = plAreaWarp1.getBottomLeft().y;
-
-			if (minY > plAreaWarp1.getTopRight().y)
-				minY = plAreaWarp1.getTopRight().y;
-
-			if (maxY < plAreaWarp1.getBottomRight().y)
-				maxY = plAreaWarp1.getBottomRight().y;
-
-			if ((minX <= x) && (x <= maxX) && (minY <= y) && (y <= maxY)) {
-				isFull = true;
-				cout << "OUT" << endl;
-			}
-		}else {
-			isFull = false;
+	for (int y = 0; y < matRows; y++) {
+		for (int x = 0; x < matCols; x++) {
+			int idx = srcFrame.at<uchar>(y, x);
+			
+			//idx에 값이 존재할경우 영역 넓이 +1
+			if (idx) extent++;
 		}
-
-		plAreaWarp1.setDecideParkingLot(isFull);
 	}
-}
+	cout << "AREA :" << area->getArea()*flag << " EXTENT : "<< extent << endl;
+	//주차장 영역의 70% 넘을 경우 => FULL
+	if (extent >= area->getArea()*flag)
+		isFull = true;
 
+	area->setDecideParkingLot(isFull);
+}
+void fun(ParkingLotArea* area) {
+	area->setDecideParkingLot(true);
+}
 void makeLabeling(Mat srcFrame, Mat foreground) {
 	//1. make a labeling
 	Mat labelsFrame, stats, centroids;
@@ -520,34 +452,40 @@ void makeLabeling(Mat srcFrame, Mat foreground) {
 }
 
 //DO NOT USE FUNCTION
-//Mat carHaarCascadeFun(Mat srcFrame) {
-//	//Mat dstFrame;
-//
-//	//srcFrame.copyTo(dstFrame);
-//
-//	//// Load Face cascade (.xml file)
-//	//CascadeClassifier carCascade;
-//	//if(!carCascade.load(CARCASCADENAME))
-//	//	cout << "Error loading car cascade\n" << endl;
-//	//
-//	//// Detect cars
-//	//vector<Rect> cars;
-//	//carCascade.detectMultiScale(srcFrame, cars, 1.1, 2, 0 | CV_HAAR_SCALE_IMAGE, Size(30, 30));
-//
-//	//// Draw circles on the detected faces
-//	///*for (int i = 0; i < cars.size(); i++){
-//	//	Point center(cars[i].x + cars[i].width*0.5, cars[i].y + cars[i].height*0.5);
-//	//	ellipse(dstFrame, center, Size(cars[i].width*0.5, cars[i].height*0.5), 0, 0, 360, Scalar(255, 0, 255), 4, 8, 0);
-//	//}*/
-//
-//	//return dstFrame;
-//
-//}
+Mat detectHaarcascadesCar(Mat srcFrame){
+
+	//Copy source frame
+	Mat dstFrame;
+	srcFrame.copyTo(dstFrame);
+	
+	//Loading haarcascade xml file
+	string cascadeName = "haarcascade_cars.xml";
+	CascadeClassifier detector;
+
+	if (!detector.load(cascadeName)){
+		cerr << "ERROR: Could not load classifier cascade" << endl;
+		return srcFrame;
+	}
+
+	//Parameters
+	int grThr = 4;
+	double scaleStep = 1.1;
+	Size minObjSize(24,24);
+	Size maxObjSize(150, 200);
+
+	vector<Rect> found;
+	detector.detectMultiScale(srcFrame, found, scaleStep, grThr, 0, minObjSize, maxObjSize);
+
+	// draw results (bounding boxes)
+	for (int i = 0; i<(int)found.size(); i++)
+		rectangle(dstFrame, found[i], Scalar(0, 255, 0), 2);
+
+	return dstFrame;
+}
 
 void mouseClickFun(int event, int x, int y, int flags, void* userdata) {
 
 	if (event == EVENT_LBUTTONDOWN) 
 		cout << "좌표 = (" << x << ", " << y << ")" << endl;
-
 }
 #endif

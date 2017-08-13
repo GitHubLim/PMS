@@ -1,6 +1,7 @@
 #pragma once
 #ifndef PMS_AREA_HEADER
 #define PMS_AREA_HEADER
+
 #include <iostream>
 #include <opencv2/opencv.hpp>
 
@@ -12,8 +13,8 @@ class ParkingLotArea {
 private:
 	Point topLeft;
 	Point bottomLeft;
-	Point topRight;
 	Point bottomRight;
+	Point topRight;
 
 	int areaId;
 	int area;
@@ -27,7 +28,7 @@ public:
 	ParkingLotArea();
 	//~ParkingLotArea();
 
-	void setParkingLot(Point topLeft, Point bottomLeft, Point topRight, Point bottomRight);
+	void setParkingLot(Point topLeft, Point bottomLeft, Point bottomRight, Point topRight);
 	Point getTopLeft();
 	Point getBottomLeft();
 	Point getTopRight();
@@ -42,7 +43,7 @@ ParkingLotArea::ParkingLotArea() {
 	setDecideParkingLot(this->isFull);
 }
 
-void ParkingLotArea::setParkingLot(Point topLeft, Point bottomLeft, Point topRight, Point bottomRight) {
+void ParkingLotArea::setParkingLot(Point topLeft, Point bottomLeft, Point bottomRight, Point topRight) {
 	//parking lot ÁÂÇ¥ ÀÔ·Â
 	this->topLeft = topLeft;
 	this->bottomLeft = bottomLeft;
