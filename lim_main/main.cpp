@@ -57,7 +57,7 @@ int main(void) {
 		if (++speed % 10)
 			continue;
 
-			//End of video
+		//End of video
 		if (frame.empty()) {
 			cout << "END OF VIDEO" << endl;
 			break;
@@ -77,7 +77,7 @@ int main(void) {
 		//Labeling(warping)
 		//makeLabeling(warpFrame, foreWarpFrame);
 
-		drawParkingLotFun(warpFrame, plArea1);
+		
 
 		////주차 공간 판단
 		//decideParkingLot(foreWarpFrame, &plArea1);
@@ -97,47 +97,32 @@ int main(void) {
 
 		//Labeling(warping)
 		//makeLabeling(warpFrame2, foreWarpFrame2);
-		
-		//주차 영역 그리기 
-		//drawParkingLotFun(warpFrame2, plArea2);
 
-		////주차 공간 판단
-		//decideParkingLot(foreWarpFrame2, &plArea2);
 		//--------------------------------------
+		//----------------- Decide Parking Lot -----------------
 
-		//----- warping !!-----
-		Mat warpFrame3, backWarpFrame3;
+		Mat warpFrame3, backWarpFrame3, warpFrame4, backWarpFrame4;
 
 		//Warping 영역
 		warpFrame3 = warpingFun(warpFrame, Point(247, 12), Point(255, 58), Point(294, 60), Point(280, 10));
 		backWarpFrame3 = warpingFun(backWarpFrame, Point(247, 12), Point(255, 58), Point(294, 60), Point(280, 10));
-
-		//차영상(warping)
-		Mat foreWarpFrame3 = diffFrame(backWarpFrame3, warpFrame3);
-
-		decideParkingLot(foreWarpFrame3, &plArea1, 0.75);
-
-		imshow("WARPING3", warpFrame3);
-		imshow("BACKWARPFRAME3", backWarpFrame3);
-		imshow("FOREWARPINGFRAME3", foreWarpFrame3);
-
-		Mat warpFrame4, backWarpFrame4;
-
-		//Warping 영역
 		warpFrame4 = warpingFun(warpFrame2, Point(77, 77), Point(77, 100), Point(112, 96), Point(112, 73));
 		backWarpFrame4 = warpingFun(backWarpFrame2, Point(77, 77), Point(77, 100), Point(112, 96), Point(112, 73));
 
 		//차영상(warping)
+		Mat foreWarpFrame3 = diffFrame(backWarpFrame3, warpFrame3);
 		Mat foreWarpFrame4 = diffFrame(backWarpFrame4, warpFrame4);
 
-		decideParkingLot(foreWarpFrame4, &plArea2, 0.3);
+		decideParkingLot(foreWarpFrame3, &plArea1, 0.75, 0.2);
+		decideParkingLot(foreWarpFrame4, &plArea2, 0.3, 0.1);
 
+		//-----------------------------------------------------
+		drawParkingLotFun(warpFrame, plArea1);
 		drawParkingLotFun(warpFrame2, plArea2);
-		imshow("WARPING4", warpFrame4);
-		imshow("BACKWARPFRAME4", backWarpFrame4);
-		imshow("FOREWARPINGFRAME4", foreWarpFrame4);
+		//imshow("WARPING4", warpFrame4);
+		//imshow("BACKWARPFRAME4", backWarpFrame4);
+		//imshow("FOREWARPINGFRAME4", foreWarpFrame4);
 
-		//---------------------
 		//------------ Main frame --------------
 		//Preprocessing
 		//frame = preprocessing(frame, mask);
@@ -157,7 +142,6 @@ int main(void) {
 		char fpsStr[20];
 		sprintf_s(fpsStr, 20, "FPS: %.1lf", fps);
 		putText(frame, fpsStr, Point(5, 35), FONT_HERSHEY_SIMPLEX, 1., Scalar(0, 255, 0), 2);
-
 		//--------------------------------------
 
 		//Car haarcascade
@@ -169,12 +153,13 @@ int main(void) {
 		//imshow("CARCASCADE", carFrame);
 
 		imshow("WARPING", warpFrame);
-		imshow("BACKWARPFRAME", backWarpFrame);
-		imshow("FOREWARPINGFRAME", foreWarpFrame);
-
 		imshow("WARPING2", warpFrame2);
-		imshow("BACKWARPFRAME2", backWarpFrame2);
+
+		/*imshow("FOREWARPINGFRAME", foreWarpFrame);
 		imshow("FOREWARPINGFRAME2", foreWarpFrame2);
+
+		imshow("BACKWARPFRAME", backWarpFrame);
+		imshow("BACKWARPFRAME2", backWarpFrame2);*/
 
 		/*imshow("PARKING LOT", warpParkingLot);*/
 		//Mouse callback Function

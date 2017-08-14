@@ -390,10 +390,10 @@ void drawParkingLotFun(Mat srcFrame, ParkingLotArea area) {
 	circle(srcFrame, area.getParkingLotPoint(), 4, area.getDecideParkingLot(), 4);
 }
 
-void decideParkingLot(Mat srcFrame, ParkingLotArea* area, float flag){
+void decideParkingLot(Mat srcFrame, ParkingLotArea* area, float maxExtent, float minExtent){
 
 	//Detecting object 
-	bool isFull = false;
+	int level = 0;
 
 	// Matrix 가로 세로
 	int matCols = srcFrame.cols;
@@ -402,20 +402,26 @@ void decideParkingLot(Mat srcFrame, ParkingLotArea* area, float flag){
 	//영역넓이
 	int extent = 0;
 
-	for (int y = 0; y < matRows; y++) {
-		for (int x = 0; x < matCols; x++) {
-			int idx = srcFrame.at<uchar>(y, x);
+	for (int y = 0; y < matRows; y++){
+		for (int x = 0; x < matCols; x++){
+			int binary = srcFrame.at<uchar>(y, x);
 			
 			//idx에 값이 존재할경우 영역 넓이 +1
-			if (idx) extent++;
+			if(binary) extent++;
 		}
 	}
-	cout << "AREA :" << area->getArea()*flag << " EXTENT : "<< extent << endl;
-	//주차장 영역의 70% 넘을 경우 => FULL
-	if (extent >= area->getArea()*flag)
-		isFull = true;
-
-	area->setDecideParkingLot(isFull);
+	cout << " AREA(MAX) :" << area->getArea()*maxExtent 
+		 << "\tAREA(MIN) :" << area->getArea()*minExtent 
+		 << "\tEXTENT : "<< extent << endl;
+	//주차장 영역의  넘을 경우 => FULL
+	if (extent >= area->getArea()*maxExtent)
+		level = 0;
+	else if (extent >= area->getArea()*minExtent)
+		level = 1;
+	else
+		level = 2;
+	
+	area->setDecideParkingLot(level);
 }
 void fun(ParkingLotArea* area) {
 	area->setDecideParkingLot(true);
