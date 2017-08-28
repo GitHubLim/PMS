@@ -11,38 +11,51 @@ using namespace cv;
 class ParkingLotArea {
 
 private:
+	//주차 공간 위치
 	Point topLeft;
 	Point bottomLeft;
 	Point bottomRight;
 	Point topRight;
 
-	int areaId;
+	int ID; //주차공간 ID
 	int area;
 
-	bool isFull = false; //주차영역 차있는지
-
+	int level = 0; //주차 영역 단계별 판단
 	Point parkingLotPoint;
 	Scalar decideParkingLot; //주차 영역 색
 
 public:
 	ParkingLotArea();
-	//~ParkingLotArea();
+	~ParkingLotArea();
 
 	void setParkingLot(Point topLeft, Point bottomLeft, Point bottomRight, Point topRight);
+	void setID(int id);
+	void setDecideParkingLot(int level);
 	Point getTopLeft();
 	Point getBottomLeft();
 	Point getTopRight();
 	Point getBottomRight();
 	Point getParkingLotPoint();
+
+	int getID();
 	int getArea();
-	void setDecideParkingLot(bool isFull);
 	Scalar getDecideParkingLot();
 };
 
 ParkingLotArea::ParkingLotArea() {
-	setDecideParkingLot(this->isFull);
+	setDecideParkingLot(this->level);
 }
 
+ParkingLotArea::~ParkingLotArea() {
+}
+
+void ParkingLotArea::setID(int id) {
+	this->ID = id;
+}
+
+int ParkingLotArea::getID() {
+	return this->ID;
+}
 void ParkingLotArea::setParkingLot(Point topLeft, Point bottomLeft, Point bottomRight, Point topRight) {
 	//parking lot 좌표 입력
 	this->topLeft = topLeft;
@@ -102,18 +115,29 @@ int ParkingLotArea::getArea() {
 	return this->area;
 }
 
-void ParkingLotArea::setDecideParkingLot(bool isFull) {
-	this->isFull = isFull;
+void ParkingLotArea::setDecideParkingLot(int level) {
+	this->level = level;
 
-	if(this->isFull){
-		this->decideParkingLot[0] = 0;
-		this->decideParkingLot[1] = 255;
-		this->decideParkingLot[2] = 0;
-	}else {
-		this->decideParkingLot[0] = 0;
-		this->decideParkingLot[1] = 0;
-		this->decideParkingLot[2] = 255;
+	switch (this->level) {
+		case 0:		// RED(차량이 차있음)
+			this->decideParkingLot[0] = 0;
+			this->decideParkingLot[1] = 255;
+			this->decideParkingLot[2] = 0;
+			break;
+		case 1:		//YELLOW(차량을 댈 수 없음(의심 구역)
+			this->decideParkingLot[0] = 0;
+			this->decideParkingLot[1] = 255;
+			this->decideParkingLot[2] = 255;
+			break;
+		case 2: 	//GREEN(차량을 댈 수 있음)
+			this->decideParkingLot[0] = 0;
+			this->decideParkingLot[1] = 0;
+			this->decideParkingLot[2] = 255;
+			break;
+		default:
+			cerr << "setDecideParkingLot Function is not operating" << endl;
 	}
+
 }
 
 Scalar ParkingLotArea::getDecideParkingLot() {

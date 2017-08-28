@@ -172,3 +172,143 @@ cout << " AREA(20%) " << plArea1.getArea() * 0.2
 //}
 //else
 //isFull = false;
+////------------- Warping ---------------
+//Mat warpFrame, backWarpFrame;
+////Warping 영역
+//plArea1.setParkingLot(Point(247, 12), Point(255, 58), Point(294, 60), Point(280, 10));
+
+//warpFrame = warpingFun(frame, Point(346, 297), Point(341, 352), Point(638, 375), Point(621, 314));
+//backWarpFrame = warpingFun(background, Point(346, 297), Point(341, 352), Point(638, 375), Point(621, 314));
+
+////차영상(warping)
+//Mat foreWarpFrame = diffFrame(backWarpFrame, warpFrame, true);
+
+////Labeling(warping)
+////makeLabeling(warpFrame, foreWarpFrame);
+
+//
+
+//////주차 공간 판단
+////decideParkingLot(foreWarpFrame, &plArea1);
+
+////--------------------------------------
+
+////------------- Warping 2---------------
+//Mat warpFrame2, backWarpFrame2;
+////Warping 영역
+//plArea2.setParkingLot(Point(77, 77), Point(77, 100), Point(112, 96), Point(112, 73));
+
+//warpFrame2 = warpingFun(frame, Point(209, 200), Point(63, 399), Point(180, 422), Point(274, 211));
+//backWarpFrame2 = warpingFun(background, Point(209, 200), Point(63, 399), Point(180, 422), Point(274, 211));
+
+////차영상(warping)
+//Mat foreWarpFrame2 = diffFrame(backWarpFrame2, warpFrame2, true);
+
+////Labeling(warping)
+////makeLabeling(warpFrame2, foreWarpFrame2);
+
+////--------------------------------------
+////----------------- Decide Parking Lot -----------------
+
+//Mat warpFrame3, backWarpFrame3, warpFrame4, backWarpFrame4;
+
+////Warping 영역
+//warpFrame3 = warpingFun(warpFrame, Point(247, 12), Point(255, 58), Point(294, 60), Point(280, 10));
+//backWarpFrame3 = warpingFun(backWarpFrame, Point(247, 12), Point(255, 58), Point(294, 60), Point(280, 10));
+//warpFrame4 = warpingFun(warpFrame2, Point(77, 77), Point(77, 100), Point(112, 96), Point(112, 73));
+//backWarpFrame4 = warpingFun(backWarpFrame2, Point(77, 77), Point(77, 100), Point(112, 96), Point(112, 73));
+
+////차영상(warping)
+//Mat foreWarpFrame3 = diffFrame(backWarpFrame3, warpFrame3, true);
+//Mat foreWarpFrame4 = diffFrame(backWarpFrame4, warpFrame4, true);
+
+//decideParkingLot(foreWarpFrame3, &plArea1, 0.75, 0.2);
+//decideParkingLot(foreWarpFrame4, &plArea2, 0.3, 0.1);
+
+////-----------------------------------------------------
+//drawParkingLotFun(warpFrame, plArea1);
+//drawParkingLotFun(warpFrame2, plArea2);
+////imshow("WARPING4", warpFrame4);
+////imshow("BACKWARPFRAME4", backWarpFrame4);
+////imshow("FOREWARPINGFRAME4", foreWarpFrame4);
+
+////------------ Main frame --------------
+////Preprocessing
+//frame = preprocessing(frame, mask);
+
+////Difference between frame
+//Mat foreground = diffFrame(background, frame, true);
+
+//Parking line
+//drawParkingLotFun(frame);
+
+//Labeling 
+//makeLabeling(frame, foreground);
+
+//Car haarcascade
+//frame = preprocessing(frame, foreground);
+//Mat carFrame = detectHaarcascadesCar(frame);
+//imshow("CARCASCADE", carFrame);
+
+////장애인 주차장 점
+//circle(srcFrame, Point(345, 300), 3, Scalar(0, 0, 255), 1);
+//circle(srcFrame, Point(397, 303), 3, Scalar(0, 0, 255), 1);
+//circle(srcFrame, Point(402, 355), 3, Scalar(0, 0, 255), 1);
+//circle(srcFrame, Point(343, 347), 3, Scalar(0, 0, 255), 1);
+//
+////왼쪽 첫번째 점
+//circle(srcFrame, Point(158, 450), 3, Scalar(0, 0, 225), 1);
+////왼쪽 두번째 점
+//circle(srcFrame, Point(171, 420), 3, Scalar(0, 0, 225), 1);
+////왼쪽 세번째 점
+//circle(srcFrame, Point(189, 382), 3, Scalar(0, 0, 225), 1);
+////왼쪽 네번째 점
+//circle(srcFrame, Point(204, 352), 3, Scalar(0, 0, 225), 1);
+////왼쪽 다섯번째 점
+//circle(srcFrame, Point(215, 326), 3, Scalar(0, 0, 225), 1);
+////왼쪽 여섯번째 점
+//circle(srcFrame, Point(226, 304), 3, Scalar(0, 0, 225), 1);
+////왼쪽 일곱번째 점
+//circle(srcFrame, Point(237, 283), 3, Scalar(0, 0, 225), 1);
+////왼쪽 여덟번째 점
+//circle(srcFrame, Point(245, 266), 3, Scalar(0, 0, 225), 1);
+////왼쪽 아홉번째 점
+//circle(srcFrame, Point(252, 251), 3, Scalar(0, 0, 225), 1);
+////왼쪽 열번째 점
+//circle(srcFrame, Point(257, 237), 3, Scalar(0, 0, 225), 1);
+////왼쪽 열한번째 점
+//circle(srcFrame, Point(264, 225), 3, Scalar(0, 0, 225), 1);
+////왼쪽 열두번째 점
+//circle(srcFrame, Point(269, 214), 3, Scalar(0, 0, 225), 1);
+////왼쪽 열세번째 점
+//circle(srcFrame, Point(272, 204), 3, Scalar(0, 0, 225), 1);
+////왼쪽 열네번째 점
+//circle(srcFrame, Point(278, 194), 3, Scalar(0, 0, 225), 1);
+////왼쪽 열다섯번째 점
+//circle(srcFrame, Point(281, 186), 3, Scalar(0, 0, 225), 1);
+////왼쪽 열여섯번째 점
+//circle(srcFrame, Point(285, 177), 3, Scalar(0, 0, 225), 1);
+////왼쪽 열일곱번째 점
+//circle(srcFrame, Point(287, 171), 3, Scalar(0, 0, 225), 1);
+////왼쪽 열여덟번째 점
+//circle(srcFrame, Point(291, 165), 3, Scalar(0, 0, 225), 1);
+//
+////장애인주차장 오른쪽 첫번째 주차 점
+//circle(srcFrame, Point(449, 359), 3, Scalar(0, 0, 225), 1); // 아래 점
+//circle(srcFrame, Point(437, 305), 3, Scalar(0, 0, 225), 1); //위 점
+//
+//															//장애인주차장 오른쪽 두번째 주차 점
+//circle(srcFrame, Point(495, 363), 3, Scalar(0, 0, 225), 1); // 아래 점
+//circle(srcFrame, Point(477, 307), 3, Scalar(0, 0, 225), 1); //위 점
+//
+//															//장애인주차장 오른쪽 세번째 주차 점
+//circle(srcFrame, Point(542, 367), 3, Scalar(0, 0, 225), 1); // 아래 점
+//circle(srcFrame, Point(518, 309), 3, Scalar(0, 0, 225), 1); //위 점
+//
+//															//장애인주차장 오른쪽 네번째 주차 점
+//circle(srcFrame, Point(590, 370), 3, Scalar(0, 0, 225), 1); // 아래 점
+//circle(srcFrame, Point(563, 311), 3, Scalar(0, 0, 225), 1); //위 점
+//
+//															//장애인주차장 오른쪽 다섯번째 주차 점
+//circle(srcFrame, Point(636, 374), 3, Scalar(0, 0, 225), 1); // 아래 점
+//circle(srcFrame, Point(605, 314), 3, Scalar(0, 0, 225), 1); //위 점

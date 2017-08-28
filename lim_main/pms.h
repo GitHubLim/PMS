@@ -11,7 +11,7 @@
 #include <vector>
 #include "area.h"
 
-#define FILENAME "rainy2.mp4"
+#define FILENAME "front_side_01.avi"
 #define GNUPLOTLOCATE _T("C:\\Program Files\\gnuplot\\bin\\wgnuplot.exe")
 
 #define ESC 27
@@ -29,11 +29,16 @@
 #define LOWV 31
 #define HIGHV 255
 
+#define RESIZE 2
+
 #define SCALEFIRST 9
 #define SCALESECOND 19
 
 #define SCALETHIRD 37
 
+#define FULL 0
+#define AMBIGUOUS 1
+#define EMPTY 2
 
 using namespace std;
 using namespace cv;
@@ -250,89 +255,30 @@ Mat preprocessing(Mat srcFrame, Mat mask){
 	return dstFrame;
 }
 
-Mat drawCircle(Mat srcFrame) {
-	//장애인 주차장 점
-	circle(srcFrame, Point(345, 300), 3, Scalar(0, 0, 255), 1);
-	circle(srcFrame, Point(397, 303), 3, Scalar(0, 0, 255), 1);
-	circle(srcFrame, Point(402, 355), 3, Scalar(0, 0, 255), 1);
-	circle(srcFrame, Point(343, 347), 3, Scalar(0, 0, 255), 1);
+Mat warpingFun(Mat srcFrame, ParkingLotArea area) {
 
-	//왼쪽 첫번째 점
-	circle(srcFrame, Point(158, 450), 3, Scalar(0, 0, 225), 1);
-	//왼쪽 두번째 점
-	circle(srcFrame, Point(171, 420), 3, Scalar(0, 0, 225), 1);
-	//왼쪽 세번째 점
-	circle(srcFrame, Point(189, 382), 3, Scalar(0, 0, 225), 1);
-	//왼쪽 네번째 점
-	circle(srcFrame, Point(204, 352), 3, Scalar(0, 0, 225), 1);
-	//왼쪽 다섯번째 점
-	circle(srcFrame, Point(215, 326), 3, Scalar(0, 0, 225), 1);
-	//왼쪽 여섯번째 점
-	circle(srcFrame, Point(226, 304), 3, Scalar(0, 0, 225), 1);
-	//왼쪽 일곱번째 점
-	circle(srcFrame, Point(237, 283), 3, Scalar(0, 0, 225), 1);
-	//왼쪽 여덟번째 점
-	circle(srcFrame, Point(245, 266), 3, Scalar(0, 0, 225), 1);
-	//왼쪽 아홉번째 점
-	circle(srcFrame, Point(252, 251), 3, Scalar(0, 0, 225), 1);
-	//왼쪽 열번째 점
-	circle(srcFrame, Point(257, 237), 3, Scalar(0, 0, 225), 1);
-	//왼쪽 열한번째 점
-	circle(srcFrame, Point(264, 225), 3, Scalar(0, 0, 225), 1);
-	//왼쪽 열두번째 점
-	circle(srcFrame, Point(269, 214), 3, Scalar(0, 0, 225), 1);
-	//왼쪽 열세번째 점
-	circle(srcFrame, Point(272, 204), 3, Scalar(0, 0, 225), 1);
-	//왼쪽 열네번째 점
-	circle(srcFrame, Point(278, 194), 3, Scalar(0, 0, 225), 1);
-	//왼쪽 열다섯번째 점
-	circle(srcFrame, Point(281, 186), 3, Scalar(0, 0, 225), 1);
-	//왼쪽 열여섯번째 점
-	circle(srcFrame, Point(285, 177), 3, Scalar(0, 0, 225), 1);
-	//왼쪽 열일곱번째 점
-	circle(srcFrame, Point(287, 171), 3, Scalar(0, 0, 225), 1);
-	//왼쪽 열여덟번째 점
-	circle(srcFrame, Point(291, 165), 3, Scalar(0, 0, 225), 1);
+	Point topLeft, bottomLeft, bottomRight, topRight;
+	
+	topLeft = area.getTopLeft();
+	bottomLeft = area.getBottomLeft();
+	bottomRight = area.getBottomRight();
+	topRight = area.getTopRight();
 
-	//장애인주차장 오른쪽 첫번째 주차 점
-	circle(srcFrame, Point(449, 359), 3, Scalar(0, 0, 225), 1); // 아래 점
-	circle(srcFrame, Point(437, 305), 3, Scalar(0, 0, 225), 1); //위 점
+	//가장 큰 길이 width / height
+	double width1 = sqrt(pow(bottomRight.x - bottomLeft.x, 2) + pow(bottomRight.y - bottomLeft.y, 2));
+	double width2 = sqrt(pow(topRight.x - topLeft.x, 2) + pow(topRight.y - topLeft.y, 2));
+	double height1 = sqrt(pow(topRight.x - bottomRight.x, 2) + pow(topRight.y - bottomRight.y, 2));
+	double height2 = sqrt(pow(topLeft.x - bottomLeft.x, 2) + pow(topLeft.y - bottomLeft.y, 2));
 
-															 //장애인주차장 오른쪽 두번째 주차 점
-	circle(srcFrame, Point(495, 363), 3, Scalar(0, 0, 225), 1); // 아래 점
-	circle(srcFrame, Point(477, 307), 3, Scalar(0, 0, 225), 1); //위 점
-
-															 //장애인주차장 오른쪽 세번째 주차 점
-	circle(srcFrame, Point(542, 367), 3, Scalar(0, 0, 225), 1); // 아래 점
-	circle(srcFrame, Point(518, 309), 3, Scalar(0, 0, 225), 1); //위 점
-
-															 //장애인주차장 오른쪽 네번째 주차 점
-	circle(srcFrame, Point(590, 370), 3, Scalar(0, 0, 225), 1); // 아래 점
-	circle(srcFrame, Point(563, 311), 3, Scalar(0, 0, 225), 1); //위 점
-
-															 //장애인주차장 오른쪽 다섯번째 주차 점
-	circle(srcFrame, Point(636, 374), 3, Scalar(0, 0, 225), 1); // 아래 점
-	circle(srcFrame, Point(605, 314), 3, Scalar(0, 0, 225), 1); //위 점
-
-	return srcFrame;
-}
-
-Mat warpingFun(Mat srcFrame, Point topLeft, Point bottomLeft, Point bottomRight, Point topRight) {
-
-	double w1 = sqrt(pow(bottomRight.x - bottomLeft.x, 2) + pow(bottomRight.y - bottomLeft.y, 2));
-	double w2 = sqrt(pow(topRight.x - topLeft.x, 2) + pow(topRight.y - topLeft.y, 2));
-	double h1 = sqrt(pow(topRight.x - bottomRight.x, 2) + pow(topRight.y - bottomRight.y, 2));
-	double h2 = sqrt(pow(topLeft.x - bottomLeft.x, 2) + pow(topLeft.y - bottomLeft.y, 2));
-
-	double maxWidth = (w1 > w2) ? w1 : w2;
-	double maxHeight = (h1 > h2) ? h1 : h2;
+	double maxWidth = (width1 > width2) ? width1 : width2;
+	double maxHeight = (height1 > height2) ? height1 : height2;
 
 	//warping 전,후 좌표(src, dst)
 	Point2f src[4], dst[4];
-	src[0] = Point2f(topLeft.x, topLeft.y);            //왼쪽 위
-	src[1] = Point2f(topRight.x, topRight.y);         //오른쪽 위
-	src[2] = Point2f(bottomRight.x, bottomRight.y);      //오른쪽 아래
-	src[3] = Point2f(bottomLeft.x, bottomLeft.y);      //왼쪽 아래
+	src[0] = Point2f(topLeft.x, topLeft.y);					//왼쪽 위
+	src[1] = Point2f(topRight.x, topRight.y);				//오른쪽 위
+	src[2] = Point2f(bottomRight.x, bottomRight.y);			//오른쪽 아래
+	src[3] = Point2f(bottomLeft.x, bottomLeft.y);		    //왼쪽 아래
 
 	dst[0] = Point2f(0, 0);
 	dst[1] = Point2f(maxWidth - 1, 0);
@@ -351,7 +297,7 @@ Mat warpingFun(Mat srcFrame, Point topLeft, Point bottomLeft, Point bottomRight,
 	return dstFrame;
 }
 
-Mat diffFrame(Mat background, Mat srcFrame) {
+Mat diffFrameFun(Mat srcFrame, Mat background, bool isMorph) {
 	Mat foreground, grayFrame;
 	
 	//1. Source Frame을 Gray Frame으로 변환
@@ -360,11 +306,12 @@ Mat diffFrame(Mat background, Mat srcFrame) {
 
 	//2. 2개의 프레임의 차이의 절댓값 => foreground
 	absdiff(background, srcFrame, foreground);
-
+	
 	//3. Erode, Dilate (미세한 잡음 제거 및 유사 영역 합침)
-	erode(foreground, foreground, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)));
-	dilate(foreground, foreground, getStructuringElement(MORPH_ELLIPSE, Size(19, 19)));
-
+	if (isMorph) {
+		erode(foreground, foreground, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)));
+		dilate(foreground, foreground, getStructuringElement(MORPH_ELLIPSE, Size(19, 19)));
+	}
 	//dilate(foreground, foreground, getStructuringElement(MORPH_ELLIPSE, Size(SCALETHIRD, SCALETHIRD)));
 	//erode(foreground, foreground, getStructuringElement(MORPH_ELLIPSE, Size(SCALETHIRD, SCALETHIRD)));
 
@@ -374,58 +321,19 @@ Mat diffFrame(Mat background, Mat srcFrame) {
 
 	cvtColor(foreground, foreground, CV_BGR2GRAY);
 	threshold(foreground, foreground, thresholdValue, maxBinaryValue, THRESH_BINARY);
+	
+	////MOG2 approach
+	//Ptr<BackgroundSubtractor> pMOG2;
+	//pMOG2 = createBackgroundSubtractorMOG2(500, 250, true); 
+
+	//pMOG2->apply(srcFrame, foreground);
 
 	return foreground;
 }
 
-void drawParkingLotFun(Mat srcFrame, ParkingLotArea area) {
-	Scalar lineColor(0, 0, 255);
 
-	line(srcFrame, area.getTopLeft(), area.getBottomLeft(), lineColor, 1);
-	line(srcFrame, area.getBottomLeft(), area.getBottomRight(), lineColor, 1);
-	line(srcFrame, area.getBottomRight(), area.getTopRight(), lineColor, 1);
-	line(srcFrame, area.getTopRight(), area.getTopLeft(), lineColor, 1);
 
-	//주차장 주차 가능 확인
-	circle(srcFrame, area.getParkingLotPoint(), 4, area.getDecideParkingLot(), 4);
-}
 
-void decideParkingLot(Mat srcFrame, ParkingLotArea* area, float maxExtent, float minExtent){
-
-	//Detecting object 
-	int level = 0;
-
-	// Matrix 가로 세로
-	int matCols = srcFrame.cols;
-	int matRows = srcFrame.rows;
-
-	//영역넓이
-	int extent = 0;
-
-	for (int y = 0; y < matRows; y++){
-		for (int x = 0; x < matCols; x++){
-			int binary = srcFrame.at<uchar>(y, x);
-			
-			//idx에 값이 존재할경우 영역 넓이 +1
-			if(binary) extent++;
-		}
-	}
-	cout << " AREA(MAX) :" << area->getArea()*maxExtent 
-		 << "\tAREA(MIN) :" << area->getArea()*minExtent 
-		 << "\tEXTENT : "<< extent << endl;
-	//주차장 영역의  넘을 경우 => FULL
-	if (extent >= area->getArea()*maxExtent)
-		level = 0;
-	else if (extent >= area->getArea()*minExtent)
-		level = 1;
-	else
-		level = 2;
-	
-	area->setDecideParkingLot(level);
-}
-void fun(ParkingLotArea* area) {
-	area->setDecideParkingLot(true);
-}
 void makeLabeling(Mat srcFrame, Mat foreground) {
 	//1. make a labeling
 	Mat labelsFrame, stats, centroids;
@@ -489,9 +397,94 @@ Mat detectHaarcascadesCar(Mat srcFrame){
 	return dstFrame;
 }
 
+void pushParkingLotPoint(vector<ParkingLotArea>* vecArea, int ID, Point topLeft, Point bottomLeft, Point bottomRight, Point topRight){
+	ParkingLotArea area;
+	area.setID(ID);																		//ID0;
+	area.setParkingLot(topLeft, bottomLeft, bottomRight, topRight);
+	vecArea->push_back(area);
+}
+
+void setParkingLotPoint(vector<ParkingLotArea>* vecArea) {
+	ParkingLotArea area;
+	int ID = 0;
+	pushParkingLotPoint(vecArea, ID++, Point(126, 187), Point(97, 238), Point(136, 243), Point(160, 190));	//ID00;
+	pushParkingLotPoint(vecArea, ID++, Point(160, 190), Point(136, 243), Point(176, 246), Point(194, 190));	//ID01;
+	pushParkingLotPoint(vecArea, ID++, Point(194, 190), Point(176, 246), Point(220, 248), Point(236, 191));	//ID02;
+	pushParkingLotPoint(vecArea, ID++, Point(236, 191), Point(220, 248), Point(269, 252), Point(279, 194));	//ID03;
+	pushParkingLotPoint(vecArea, ID++, Point(279, 194), Point(269, 252), Point(321, 251), Point(323, 195));	//ID04;
+	pushParkingLotPoint(vecArea, ID++, Point(323, 195), Point(321, 251), Point(368, 253), Point(364, 195));	//ID05;
+	pushParkingLotPoint(vecArea, ID++, Point(364, 195), Point(368, 253), Point(417, 253), Point(409, 195));	//ID06;
+	pushParkingLotPoint(vecArea, ID++, Point(409, 195), Point(417, 253), Point(464, 253), Point(450, 195));	//ID07;
+	pushParkingLotPoint(vecArea, ID++, Point(450, 195), Point(464, 253), Point(507, 252), Point(488, 195));	//ID08;
+	pushParkingLotPoint(vecArea, ID++, Point(488, 195), Point(507, 252), Point(547, 248), Point(530, 194));	//ID09;
+	pushParkingLotPoint(vecArea, ID++, Point(530, 194), Point(547, 248), Point(583, 246), Point(562, 193));	//ID10;
+	pushParkingLotPoint(vecArea, ID++, Point(562, 193), Point(583, 246), Point(611, 245), Point(596, 192));	//ID11;
+}
+
+void decideParkingLotPoint(Mat mask, ParkingLotArea* area, float maxExtent, float minExtent) {
+
+	//Detecting object 
+	int level = 0;
+
+	// Matrix 가로 세로
+	int matCols = mask.cols;
+	int matRows = mask.rows;
+
+	//영역넓이
+	int extent = 0;
+
+	for (int y = 0; y < matRows; y++) {
+		for (int x = 0; x < matCols; x++) {
+			int binary = mask.at<uchar>(y, x);
+
+			//idx에 값이 존재할경우 영역 넓이 +1
+			if (binary) extent++;
+		}
+	}
+
+	cout << " AREA(MAX) :" << area->getArea()*maxExtent
+		<< "\tAREA(MIN) :" << area->getArea()*minExtent
+		<< "\tEXTENT : " << extent << endl;
+
+	//주차장 영역의  넘을 경우 => FULL
+	if (extent >= area->getArea()*maxExtent)
+		level = FULL;
+	else if (extent >= area->getArea()*minExtent)
+		level = AMBIGUOUS;
+	else
+		level = EMPTY;
+
+	area->setDecideParkingLot(level);
+}
+void drawParkingLotFun(Mat srcFrame, vector<ParkingLotArea>* vecArea) {
+	Scalar lineColor(0, 0, 255);
+	vector<ParkingLotArea>::iterator iter;
+
+	//vector에 있는 값을 전부 추출
+	for (iter = vecArea->begin(); iter != vecArea->end(); ++iter) {
+		ParkingLotArea area;
+		area = *iter;
+
+		line(srcFrame, area.getTopLeft(), area.getBottomLeft(), lineColor, 1);
+		line(srcFrame, area.getBottomLeft(), area.getBottomRight(), lineColor, 1);
+		line(srcFrame, area.getBottomRight(), area.getTopRight(), lineColor, 1);
+		line(srcFrame, area.getTopRight(), area.getTopLeft(), lineColor, 1);
+
+		//주차장 주차 가능 확인
+		circle(srcFrame, area.getParkingLotPoint(), 4, area.getDecideParkingLot(), 4);
+	}
+}
+
+void showFPS(Mat srcFrame, int64 freq, int64 start, int64 finish) {
+	double fps = freq / double(finish - start + 1);
+	char fpsStr[20];
+	sprintf_s(fpsStr, 20, "FPS: %.1lf", fps);
+	putText(srcFrame, fpsStr, Point(400, 35), FONT_HERSHEY_SIMPLEX, 1., Scalar(0, 255, 0), 2);
+}
 void mouseClickFun(int event, int x, int y, int flags, void* userdata) {
 
 	if (event == EVENT_LBUTTONDOWN) 
 		cout << "좌표 = (" << x << ", " << y << ")" << endl;
 }
+
 #endif
