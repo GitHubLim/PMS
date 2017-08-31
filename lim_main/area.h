@@ -5,6 +5,10 @@
 #include <iostream>
 #include <opencv2/opencv.hpp>
 
+#define	EMPTY 0
+#define AMBIGUOUS 1
+#define FULL 2
+
 using namespace std;
 using namespace cv;
 
@@ -16,6 +20,9 @@ private:
 	Point bottomLeft;
 	Point bottomRight;
 	Point topRight;
+
+	//비교 Matrix
+	Mat background;
 
 	int ID; //주차공간 ID
 	int area;
@@ -31,11 +38,16 @@ public:
 	void setParkingLot(Point topLeft, Point bottomLeft, Point bottomRight, Point topRight);
 	void setID(int id);
 	void setDecideParkingLot(int level);
+	void setBackground(Mat background);
+
 	Point getTopLeft();
 	Point getBottomLeft();
 	Point getTopRight();
 	Point getBottomRight();
 	Point getParkingLotPoint();
+	int getLevel();
+
+	Mat getBackground();
 
 	int getID();
 	int getArea();
@@ -56,6 +68,19 @@ void ParkingLotArea::setID(int id) {
 int ParkingLotArea::getID() {
 	return this->ID;
 }
+
+void ParkingLotArea::setBackground(Mat background) {
+	this->background = background;
+}
+
+Mat ParkingLotArea::getBackground() {
+	return this->background;
+}
+
+int ParkingLotArea::getLevel() {
+	return this->level;
+}
+
 void ParkingLotArea::setParkingLot(Point topLeft, Point bottomLeft, Point bottomRight, Point topRight) {
 	//parking lot 좌표 입력
 	this->topLeft = topLeft;
@@ -72,20 +97,20 @@ void ParkingLotArea::setParkingLot(Point topLeft, Point bottomLeft, Point bottom
 	float widthBottom;
 	float heightLeft;
 	float heightRight;
-	float crossLine;
+	float crossLine, crossLine2;
 
 	widthTop = sqrt(pow(topLeft.x - topRight.x, 2.0) + pow(topLeft.y - topRight.y, 2.0));
 	widthBottom = sqrt(pow(bottomLeft.x - bottomRight.x, 2.0) + pow(bottomLeft.y - bottomRight.y, 2.0));
 	heightLeft = sqrt(pow(topLeft.x - bottomLeft.x, 2.0) + pow(topLeft.y - bottomLeft.y, 2.0));
 	heightRight = sqrt(pow(bottomRight.x - topRight.x, 2.0) + pow(bottomRight.y - topRight.y, 2.0));
+
 	crossLine = sqrt(pow(topLeft.x - bottomRight.x, 2.0) + pow(topLeft.y - bottomRight.y, 2.0));
 
 	//삼각형 넓이 s1, s2(헤론의 공식) = 사각형 넓이 = S1+S2
 	float s0, s1, s2;
+
 	s0 = (widthTop + heightLeft + crossLine) / 2;
 	s1 = sqrt(s0*(s0 - widthTop)*(s0 - heightLeft)*(s0 - crossLine));
-
-	s0 = (widthBottom + widthBottom + crossLine) / 2;
 	s2 = sqrt(s0*(s0 - widthBottom)*(s0 - widthBottom)*(s0 - crossLine));
 
 	this->area = (int)(s1 + s2);
@@ -119,25 +144,26 @@ void ParkingLotArea::setDecideParkingLot(int level) {
 	this->level = level;
 
 	switch (this->level) {
-		case 0:		// RED(차량이 차있음)
+		case EMPTY: 		//GREEN(차량을 댈 수 있음)
 			this->decideParkingLot[0] = 0;
 			this->decideParkingLot[1] = 255;
 			this->decideParkingLot[2] = 0;
-			break;
-		case 1:		//YELLOW(차량을 댈 수 없음(의심 구역)
+		break;
+
+		case AMBIGUOUS:		//YELLOW(차량을 댈 수 없음(의심 구역)
 			this->decideParkingLot[0] = 0;
 			this->decideParkingLot[1] = 255;
 			this->decideParkingLot[2] = 255;
 			break;
-		case 2: 	//GREEN(차량을 댈 수 있음)
+
+		case FULL:			// RED(차량이 차있음)
 			this->decideParkingLot[0] = 0;
 			this->decideParkingLot[1] = 0;
 			this->decideParkingLot[2] = 255;
 			break;
 		default:
-			cerr << "setDecideParkingLot Function is not operating" << endl;
+			cerr << "[ERROR] area::setDecideParkingLot Function is not operating" << endl;
 	}
-
 }
 
 Scalar ParkingLotArea::getDecideParkingLot() {

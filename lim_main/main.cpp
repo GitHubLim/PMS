@@ -28,17 +28,23 @@ int main(void) {
 	Mat frame, background, mask;
 	vector<ParkingLotArea> vecArea; //vector 영역
 
-	//Background extraction and preprocessing
+									//Background extraction and preprocessing
 	video >> background;
-	resize(background, background, cv::Size(background.cols / RESIZE, background.rows / RESIZE), 0, 0, CV_INTER_NN);
+	resize(background, background, Size(background.cols / RESIZE, background.rows / RESIZE), 0, 0, CV_INTER_NN);
 	//mask = preMasking(background);
 	//background = preprocessing(background, mask);
+
+	//주차 공간 추출(수동)
+	setParkingLotPoint(&vecArea, background);
 
 	int speed = 0;
 
 	//FPS 측정
 	int64 freq, start, finish;
 	QueryPerformanceFrequency((_LARGE_INTEGER*)&freq);
+
+	Ptr<BackgroundSubtractor> pMOG2;
+	pMOG2 = createBackgroundSubtractorMOG2(500, 250, true);
 
 	//MAIN LOOP
 	while (true) {
@@ -47,16 +53,14 @@ int main(void) {
 		QueryPerformanceCounter((_LARGE_INTEGER*)&start);
 
 		//--------------MAIN-------------------
-		//Frame 추출
-		video >> frame;		//FRAME 읽기
-		//waitKey(30);		//FPS 조정(25- 27)
-
-		//Resize Frame
-		resize(frame, frame, Size(frame.cols/ RESIZE, frame.rows/ RESIZE), 0, 0, CV_INTER_NN);
+		
+		video >> frame;		//Frame 추출
+		waitKey(30);		//FPS 조정(25- 27)			
+		resize(frame, frame, Size(frame.cols / RESIZE, frame.rows / RESIZE), 0, 0, CV_INTER_NN);	//Resize Frame
 
 		//Speed of Video
-		/*if (++speed % 10)
-			continue;*/
+		if (++speed % 10)
+			continue;
 
 		//End of video
 		if (frame.empty()) {
@@ -65,45 +69,36 @@ int main(void) {
 		}
 
 		Mat foreground = diffFrameFun(frame, background, false);	//Forground 추출
-		setParkingLotPoint(&vecArea);								//주차 공간 추출(수동)
+		//Mat foreground = diffFrameFun2(frame, pMOG2);				//Forground 추출
 		//--------------------------------------
 
 		//----------------SUB-------------------
-		Mat warpFrame, backWarpFrame, foreWarpFrame;
+		frame = calibration(frame);
+		updateBackground(frame, &vecArea);							// 주차공간 업데이트
+		decideParkingLotPoint(frame, background, &vecArea);			// 주차공간 결정
+		drawParkingLotPoint(frame, &vecArea);						// 주차공간 그리기
 
-		//주차 공간 추출
-		warpFrame = warpingFun(frame, vecArea[0]);				
-		backWarpFrame = warpingFun(background, vecArea[0]);
-		foreWarpFrame = diffFrameFun(backWarpFrame, warpFrame, true);
-
-		//주차 공간 판단 
-		decideParkingLotPoint(foreWarpFrame, &vecArea[0], 0.8, 0.2);
-
-		//주차 공간 그리기
-		drawParkingLotFun(frame, &vecArea);
 		//--------------------------------------
 
 		//Processing time (fps)
 		QueryPerformanceCounter((_LARGE_INTEGER*)&finish);
-		showFPS(frame, freq, start, finish);
+		showFPSFun(frame, freq, start, finish);
 
 		imshow("PMS", frame);
 		imshow("FOREGROUND", foreground);
 
-
-		//Mouse callback Function
+		//Mouse Callback Function
 		setMouseCallback("PMS", mouseClickFun, NULL);
-		setMouseCallback("WARPING", mouseClickFun, NULL);
-		setMouseCallback("WARPING2", mouseClickFun, NULL);
 
+		//Key Event controller
 		char key = waitKey(10);
 
-		if (key == ESC) break;						// ESC Key
-		else if (key == SPACE) {					// SPACE Key
+		if (key == ESC) break;				// ESC Key
+		else if (key == SPACE) {			// SPACE Key
 			while ((key = waitKey(10)) != SPACE && key != ESC);
 			if (key == 27) break;
 		}
-
 	}
+
 	return 0;
 }
