@@ -36,11 +36,14 @@
 
 #define SCALETHIRD 37
 
-#define MAXEXTENT 0.55
-#define MINEXTENT 0.3
+#define MAXEXTENT 0.50
+#define MINEXTENT 0.20
 
 using namespace std;
 using namespace cv;
+
+int calculateExtent(Mat srcFrame, int startX, int endX, int startY, int endY);
+float rearrangeExtent(Mat srcFrame);
 
 typedef struct HoughLineInfo {
 	vector<unsigned int> iAngle;
@@ -381,21 +384,20 @@ void makeLabeling(Mat srcFrame, Mat foreground) {
 	}
 }
 
-
-Mat calibration(Mat srcFrame){
+Mat calibration(Mat srcFrame) {
 	Mat dstFrame;
 
 	double dCameraMatrix[] = { 1453.613, 0., 952.558, 0., 1460.921, 373.498, 0., 0., 1. };
 	double dDistCoeffs[] = { -0.519183, 0.335450, -0.003719, -0.003036 };
 
-	Mat cameraMatrix = Mat(3, 3, CV_64FC1, (void*)dCameraMatrix);	// 사용된 카메라 
-	Mat distCoeffs = Mat(1, 4, CV_64FC1, (void*)dDistCoeffs);		// 왜곡계수 
+	Mat cameraMatrix = Mat(3, 3, CV_64FC1, (void*)dCameraMatrix);   // 사용된 카메라 
+	Mat distCoeffs = Mat(1, 4, CV_64FC1, (void*)dDistCoeffs);      // 왜곡계수 
 
 	undistort(srcFrame, dstFrame, cameraMatrix, distCoeffs);
+	resize(dstFrame, dstFrame, Size(srcFrame.cols / RESIZE, srcFrame.rows / RESIZE), 0, 0, CV_INTER_NN);   //Resize Frame
 
 	return dstFrame;
 }
-
 
 void pushParkingLotPoint(vector<ParkingLotArea>* vecArea, int ID, Mat background, Point topLeft, Point bottomLeft, Point bottomRight, Point topRight) {
 	ParkingLotArea area;
@@ -424,8 +426,9 @@ void updateBackground(Mat srcFrame, vector<ParkingLotArea>* vecArea){
 		//주차장이 비어있을때만 background 업데이트 
 		if (level == EMPTY) {
 			Mat newBackground = warpingFun(srcFrame, *iter, false);
-			//Update 가중치 0.9*Origin + 0.1*New = new
-			addWeighted(iter->getBackground(), 0.9, newBackground, 0.1, 0, newBackground);
+
+			//Update 가중치 0.99*Origin + 0.01*New = new
+			addWeighted(iter->getBackground(), 0.99, newBackground, 0.01, 0, newBackground);
 
 			iter->setBackground(newBackground); // Update Background
 		}
@@ -449,23 +452,27 @@ void setParkingLotPoint(vector<ParkingLotArea>* vecArea, Mat background) {
 	//pushParkingLotPoint(vecArea, ID++, background, Point(488, 195), Point(507, 252), Point(547, 248), Point(530, 194));	//ID09;
 	//pushParkingLotPoint(vecArea, ID++, background, Point(530, 194), Point(547, 248), Point(583, 246), Point(562, 193));	//ID10;
 	//pushParkingLotPoint(vecArea, ID++, background, Point(562, 193), Point(583, 246), Point(611, 245), Point(596, 192));	//ID11;
-
-	//pushParkingLotPoint(vecArea, ID++, background, Point(106, 158), Point(94, 184), Point(151, 187), Point(161, 160));	//ID12;
-	//pushParkingLotPoint(vecArea, ID++, background, Point(123, 135), Point(106, 158), Point(161, 160), Point(163, 134));	//ID13;
+	//pushParkingLotPoint(vecArea, ID++, background, Point(94, 184), Point(151, 187), Point(161, 160), Point(106, 158));	//ID12;
+	//pushParkingLotPoint(vecArea, ID++, background, Point(106, 158), Point(161, 160), Point(163, 134), Point(123, 135));	//ID13;
 	//-------------------------------------------------------------------------------------------------------------------------
 
 	//-------------------------------------------------- BACK -----------------------------------------------------------------
-	pushParkingLotPoint(vecArea, ID++, background, Point(226, 230), Point(219, 271), Point(325, 275), Point(323, 237));	//ID00;
-	pushParkingLotPoint(vecArea, ID++, background, Point(231, 195), Point(226, 230), Point(323, 237), Point(325, 197));	//ID01;
-	pushParkingLotPoint(vecArea, ID++, background, Point(235, 161), Point(231, 195), Point(325, 197), Point(327, 161));	//ID02;
-	pushParkingLotPoint(vecArea, ID++, background, Point(241, 131), Point(235, 161), Point(327, 161), Point(326, 131));	//ID03;
-	pushParkingLotPoint(vecArea, ID++, background, Point(247, 103), Point(241, 131), Point(326, 131), Point(327, 105));	//ID04;
-	pushParkingLotPoint(vecArea, ID++, background, Point(250, 81), Point(247, 103), Point(327, 105), Point(325, 82));	//ID05;
-	pushParkingLotPoint(vecArea, ID++, background, Point(254, 61), Point(250, 81), Point(325, 82), Point(325, 63));	//ID06;
+	pushParkingLotPoint(vecArea, ID++, background, Point(219, 271), Point(325, 275), Point(323, 237), Point(226, 230));	//ID00;
+	pushParkingLotPoint(vecArea, ID++, background, Point(226, 230), Point(323, 237), Point(325, 197), Point(231, 195));	//ID01;
+	pushParkingLotPoint(vecArea, ID++, background, Point(231, 195), Point(325, 197), Point(327, 161), Point(235, 161));	//ID02;
+	pushParkingLotPoint(vecArea, ID++, background, Point(235, 161), Point(327, 161), Point(326, 131), Point(241, 131));	//ID03;
+	pushParkingLotPoint(vecArea, ID++, background, Point(241, 131), Point(326, 131), Point(327, 105), Point(247, 103));	//ID04;
+	pushParkingLotPoint(vecArea, ID++, background, Point(247, 103), Point(327, 105), Point(325, 82), Point(250, 81));	//ID05;
+	pushParkingLotPoint(vecArea, ID++, background, Point(250, 81), Point(325, 82), Point(325, 63), Point(254, 61));		//ID06;
+	pushParkingLotPoint(vecArea, ID++, background, Point(254, 61), Point(325, 63), Point(325, 44), Point(257, 44));		//ID07;
+	pushParkingLotPoint(vecArea, ID++, background, Point(257, 44), Point(325, 44), Point(328, 27), Point(261, 27));		//ID08;
+	pushParkingLotPoint(vecArea, ID++, background, Point(261, 27), Point(328, 27), Point(325, 9), Point(266, 9));		//ID09;
 
-	pushParkingLotPoint(vecArea, ID++, background, Point(257, 44), Point(254, 61), Point(325, 63), Point(325, 46));	//ID07;
-	pushParkingLotPoint(vecArea, ID++, background, Point(264, 27), Point(257, 44), Point(325, 46), Point(328, 27));	//ID08;
-	pushParkingLotPoint(vecArea, ID++, background, Point(261, 1), Point(264, 27), Point(328, 27), Point(325, 5));	//ID09;
+	pushParkingLotPoint(vecArea, ID++, background, Point(489, 273), Point(565, 265), Point(553, 225), Point(481, 231));		//ID09;
+	pushParkingLotPoint(vecArea, ID++, background, Point(481, 231), Point(553, 225), Point(548, 194), Point(472, 197));		//ID10;
+	pushParkingLotPoint(vecArea, ID++, background, Point(472, 197), Point(548, 194), Point(539, 166), Point(465
+		
+		, 165));		//ID11;
 }
 
 void decideParkingLotPoint(Mat srcFrame, Mat background, vector<ParkingLotArea>* vecArea){
@@ -480,44 +487,102 @@ void decideParkingLotPoint(Mat srcFrame, Mat background, vector<ParkingLotArea>*
 		warpFrame = warpingFun(srcFrame, *iter, 0);								//FRAME
 		foreWarpFrame = diffFrameFun(warpFrame, iter->getBackground(), true);	//FORGROUND
 
+		//Detecting object 
+		int level = 0;
+		float extent = 0;
 		// Matrix 가로 세로
 		int matCols = foreWarpFrame.cols;
 		int matRows = foreWarpFrame.rows;
 
-		//Detecting object 
-		int level = 0;
+		extent = calculateExtent(foreWarpFrame, 0 , matCols, 0, matRows);	//Foreground 영역구하기
+		
+	
+		//주차장 영역의 넘을 경우 => FULL
+		if (extent <= iter->getArea()*MINEXTENT) {
+			level = EMPTY;
 
-		//영역넓이
-		int extent = 0;
+			// 주차공간 업데이트
+			Mat newBackground = warpingFun(srcFrame, *iter, false);
+			//Update 가중치 0.99*Origin + 0.01*New = new
+			addWeighted(iter->getBackground(), 0.99, newBackground, 0.01, 0, newBackground);
+			iter->setBackground(newBackground); // Update Background	
 
-		for (int y = 0; y < matRows; y++) {
-			for (int x = 0; x < matCols; x++) {
-				int binary = foreWarpFrame.at<uchar>(y, x);
+		}else if (iter->getDegree() < 20) {	 // 기울기가 20도 미만일 경우 Penalty X
 
-				//idx에 값이 존재할경우 영역 넓이 +1
-				if (binary) extent++;
-			}
+			if (extent <= iter->getArea()*MAXEXTENT)
+				level = AMBIGUOUS;
+			else
+				level = FULL;
+
+		}else {								// 기울기가 20도 이상일 경우 Penalty 부여
+			extent = rearrangeExtent(foreWarpFrame);
+
+			if (extent <= iter->getArea()*MINEXTENT) 
+				level = EMPTY;
+			else if (extent <= iter->getArea()*MAXEXTENT)
+				level = AMBIGUOUS;
+			else
+				level = FULL;
 		}
 
-		cout<< "AREA(ID) :  " << iter->getID()
-			<< "\tAREA : " << iter->getArea()
-			<< "\tAREA(MAX) : " << iter->getArea()*MAXEXTENT
-			<< "\tAREA(MIN) : " << iter->getArea()*MINEXTENT
-			<< "\tEXTENT :  " << extent << endl;
+		cout << "AREA(ID) :   " << iter->getID()
+			<< "\tAREA :  " << iter->getArea()
+			<< "\tAREA(MAX) :  " << iter->getArea()*MAXEXTENT
+			<< "\tAREA(MIN) :  " << iter->getArea()*MINEXTENT
+			<< "\tEXTENT :   " << extent
+			<< "\tANGLE :  " << iter->getDegree() << endl;
 
-	
-		//주차장 영역의  넘을 경우 => FULL
-		if (extent <= iter->getArea()*MINEXTENT)
-			level = EMPTY;
-		else if (extent <= iter->getArea()*MAXEXTENT)
-			level = AMBIGUOUS;
-		else
-			level = FULL;
-
-		iter->setDecideParkingLot(level);
+		iter->setDecideParkingLot(level); //Level 저장
 	}
 }
 
+int calculateExtent(Mat srcFrame, int startCol, int endCol, int startRow, int endRow) {
+
+	int extent = 0; //영역넓이
+
+	for (int y = startRow; y < endRow; y++) {
+		for (int x = startCol; x < endCol; x++) {
+			int binary = srcFrame.at<uchar>(y, x);
+
+			if (binary) extent++; //idx에 값이 존재할경우 영역 넓이 +1
+		}
+	}
+
+	return extent;
+}
+
+float rearrangeExtent(Mat srcFrame) {
+	//영역넓이
+	float extent = 0;
+
+	// Matrix 가로 세로
+	int matCols = srcFrame.cols;
+	int matRows = srcFrame.rows;
+
+	float frontExtent, middleExtent, backExtent;
+	
+	float scale = 3;
+
+	if (matCols > matRows) {	// 세로의 길이가 더 길경우 
+		
+		frontExtent = calculateExtent(srcFrame, 0, matCols, 0, (matRows / scale));
+		middleExtent = calculateExtent(srcFrame, 0, matCols, (matRows / scale), (matRows * (scale-1) / scale));
+		backExtent = calculateExtent(srcFrame, 0, matCols, (matRows * (scale - 1) / scale), matRows);
+		
+		extent = (frontExtent + backExtent) * 0.995 + middleExtent * 0.005;	//FRONT, BACK 비율 0.9 Middle 비율 0.1
+
+	}else {				// 가로의 길이가 더 길경우 
+
+		frontExtent = calculateExtent(srcFrame, 0, (matCols / scale), 0, matRows);
+		middleExtent = calculateExtent(srcFrame, (matCols / scale), (matCols*(scale-1) / scale), 0, matRows);
+		backExtent = calculateExtent(srcFrame, (matCols*(scale - 1) / scale), matCols, 0,  matRows);
+
+		extent = (frontExtent * 0.1) + (middleExtent * 0.8) + (backExtent * 2);	//FRONT, BACK 비율 0.9 Middle 비율 0.1
+
+	}
+
+	return extent;
+}
 void drawParkingLotPoint(Mat srcFrame, vector<ParkingLotArea>* vecArea) {
 	Scalar lineColor(0, 0, 255);
 	vector<ParkingLotArea>::iterator iter;
@@ -536,6 +601,11 @@ void drawParkingLotPoint(Mat srcFrame, vector<ParkingLotArea>* vecArea) {
 		line(srcFrame, area.getBottomRight(), area.getTopRight(), lineColor, 1);
 		line(srcFrame, area.getTopRight(), area.getTopLeft(), lineColor, 1);
 
+		/*line(srcFrame, area.getPTopLeft(), area.getPBottomLeft(), lineColor, 1);
+		line(srcFrame, area.getPBottomLeft(), area.getPBottomRight(), lineColor, 1);
+		line(srcFrame, area.getPBottomRight(), area.getPTopRight(), lineColor, 1);
+		line(srcFrame, area.getPTopRight(), area.getPTopLeft(), lineColor, 1);
+*/
 		//주차장 ID값 표시
 		char IDStr[20];
 		sprintf_s(IDStr, 20, "%d", area.getID());
@@ -590,4 +660,5 @@ Mat detectHaarcascadesCar(Mat srcFrame) {
 
 	return dstFrame;
 }
+
 #endif

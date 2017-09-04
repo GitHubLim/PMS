@@ -312,3 +312,32 @@ cout << " AREA(20%) " << plArea1.getArea() * 0.2
 //															//장애인주차장 오른쪽 다섯번째 주차 점
 //circle(srcFrame, Point(636, 374), 3, Scalar(0, 0, 225), 1); // 아래 점
 //circle(srcFrame, Point(605, 314), 3, Scalar(0, 0, 225), 1); //위 점
+
+
+//Mat diffFrameFun(Mat srcFrame, Mat background, bool isMorph) {
+//	Mat foreground, grayFrame;
+//	
+//	//1. Source Frame을 Gray Frame으로 변환
+//	//cvtColor(srcFrame, grayFrame, COLOR_BayerRG2GRAY);
+//	//GaussianBlur(srcFrame, srcFrame, Size(5, 5), 0.5);
+//
+//	//2. 2개의 프레임의 차이의 절댓값 => foreground
+//	absdiff(background, srcFrame, foreground);
+//	
+//	//3. Erode, Dilate (미세한 잡음 제거 및 유사 영역 합침)
+//	if (isMorph) {
+//		erode(foreground, foreground, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)));
+//		dilate(foreground, foreground, getStructuringElement(MORPH_ELLIPSE, Size(19, 19)));
+//	}
+//	//dilate(foreground, foreground, getStructuringElement(MORPH_ELLIPSE, Size(SCALETHIRD, SCALETHIRD)));
+//	//erode(foreground, foreground, getStructuringElement(MORPH_ELLIPSE, Size(SCALETHIRD, SCALETHIRD)));
+//
+//	//4. foreground의 threshold (150 - 255)
+//	int thresholdValue = 100;
+//	int maxBinaryValue = 255;
+//
+//	cvtColor(foreground, foreground, CV_BGR2GRAY);
+//	threshold(foreground, foreground, thresholdValue, maxBinaryValue, THRESH_BINARY);
+//	
+//	return foreground;
+//}
