@@ -69,12 +69,15 @@ int main(void) {
 		if (++speed % 10)
 			continue;
 
-		Mat foreground = diffFrameFun(frame, background, false);	//Forground 추출
-		//Mat foreground = diffFrameFun2(frame, pMOG2);				//Forground 추출
+		//Mat foreground = diffFrameFun(frame, background, true);	//Forground 추출
+		Mat foreground = diffFrameFun2(frame, pMOG2);				//Forground 추출
+		foreground = maskingFun(frame, foreground, true);
 		//--------------------------------------
 
 		//----------------SUB-------------------
 
+		//makeLabeling(frame, foreground);
+		detectHaarcascadesCar(foreground);
 		decideParkingLotPoint(frame, background, &vecArea);			// 주차공간 결정
 		drawParkingLotPoint(frame, &vecArea);						// 주차공간 그리기
 

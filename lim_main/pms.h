@@ -176,7 +176,6 @@ Mat kmeansClustering(Mat srcFrame) {
 	Mat colorTable(K, 1, CV_8UC3);
 	Vec3b color;
 
-
 	//destination 이미지 만들기
 	Mat dstFrame(srcFrame.size(), srcFrame.type());
 
@@ -234,7 +233,6 @@ Mat preMasking(Mat srcFrame) {
 	//2. hsv frame to binary frame
 	inRange(hsvFrame, Scalar(LOWH, LOWS, LOWV), Scalar(HIGHH, HIGHS, HIGHV), binaryFrame);
 
-
 	//3. erode and dilate to binary frame
 	erode(binaryFrame, binaryFrame, getStructuringElement(MORPH_ELLIPSE, Size(SCALEFIRST, SCALEFIRST)));
 	dilate(binaryFrame, binaryFrame, getStructuringElement(MORPH_ELLIPSE, Size(SCALESECOND, SCALESECOND)));
@@ -248,9 +246,13 @@ Mat preMasking(Mat srcFrame) {
 	return binaryFrame;
 }
 
-Mat preprocessing(Mat srcFrame, Mat mask){
+Mat maskingFun(Mat srcFrame, Mat mask, bool isExpand){
 	Mat dstFrame;
 
+	if (isExpand) {
+		threshold(mask, mask, 15, 255, THRESH_BINARY);
+		dilate(mask, mask, getStructuringElement(MORPH_ELLIPSE, Size(11, 11)));
+	}
 	//1. masking 
 	srcFrame.copyTo(dstFrame, mask);
 
@@ -328,8 +330,9 @@ Mat diffFrameFun(Mat srcFrame, Mat background, bool isMorph) {
 	
 	//3. Erode, Dilate (미세한 잡음 제거 및 유사 영역 합침)
 	if (isMorph) {
-		erode(foreground, foreground, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)));
-		dilate(foreground, foreground, getStructuringElement(MORPH_ELLIPSE, Size(19, 19)));
+		erode(foreground, foreground, getStructuringElement(MORPH_ELLIPSE, Size(4, 4)));
+		dilate(foreground, foreground, getStructuringElement(MORPH_ELLIPSE, Size(23, 23)));
+		erode(foreground, foreground, getStructuringElement(MORPH_ELLIPSE, Size(3, 3)));
 	}
 	//dilate(foreground, foreground, getStructuringElement(MORPH_ELLIPSE, Size(SCALETHIRD, SCALETHIRD)));
 	//erode(foreground, foreground, getStructuringElement(MORPH_ELLIPSE, Size(SCALETHIRD, SCALETHIRD)));
@@ -457,8 +460,8 @@ void setParkingLotPoint(vector<ParkingLotArea>* vecArea, Mat background) {
 	//-------------------------------------------------------------------------------------------------------------------------
 
 	//-------------------------------------------------- BACK -----------------------------------------------------------------
-	pushParkingLotPoint(vecArea, ID++, background, Point(219, 271), Point(325, 275), Point(323, 237), Point(226, 230));	//ID00;
-	pushParkingLotPoint(vecArea, ID++, background, Point(226, 230), Point(323, 237), Point(325, 197), Point(231, 195));	//ID01;
+	pushParkingLotPoint(vecArea, ID++, background, Point(219, 271), Point(325, 275), Point(325, 234), Point(226, 230));	//ID00;
+	pushParkingLotPoint(vecArea, ID++, background, Point(226, 230), Point(325, 234), Point(325, 197), Point(231, 195));	//ID01;
 	pushParkingLotPoint(vecArea, ID++, background, Point(231, 195), Point(325, 197), Point(327, 161), Point(235, 161));	//ID02;
 	pushParkingLotPoint(vecArea, ID++, background, Point(235, 161), Point(327, 161), Point(326, 131), Point(241, 131));	//ID03;
 	pushParkingLotPoint(vecArea, ID++, background, Point(241, 131), Point(326, 131), Point(327, 105), Point(247, 103));	//ID04;
@@ -468,11 +471,24 @@ void setParkingLotPoint(vector<ParkingLotArea>* vecArea, Mat background) {
 	pushParkingLotPoint(vecArea, ID++, background, Point(257, 44), Point(325, 44), Point(328, 27), Point(261, 27));		//ID08;
 	pushParkingLotPoint(vecArea, ID++, background, Point(261, 27), Point(328, 27), Point(325, 9), Point(266, 9));		//ID09;
 
-	pushParkingLotPoint(vecArea, ID++, background, Point(489, 273), Point(565, 265), Point(553, 225), Point(481, 231));		//ID09;
-	pushParkingLotPoint(vecArea, ID++, background, Point(481, 231), Point(553, 225), Point(548, 194), Point(472, 197));		//ID10;
-	pushParkingLotPoint(vecArea, ID++, background, Point(472, 197), Point(548, 194), Point(539, 166), Point(465
-		
-		, 165));		//ID11;
+	pushParkingLotPoint(vecArea, ID++, background, Point(489, 273), Point(565, 265), Point(553, 225), Point(481, 231));		//ID10;
+	pushParkingLotPoint(vecArea, ID++, background, Point(481, 231), Point(553, 225), Point(548, 194), Point(472, 197));		//ID11;
+	pushParkingLotPoint(vecArea, ID++, background, Point(472, 197), Point(548, 194), Point(539, 166), Point(465, 165));		//ID12;
+
+	pushParkingLotPoint(vecArea, ID++, background, Point(465, 165), Point(539, 166), Point(528, 140), Point(461, 138));     //ID13;
+	pushParkingLotPoint(vecArea, ID++, background, Point(461, 138), Point(528, 140), Point(519, 118), Point(454, 114));     //ID14;
+	pushParkingLotPoint(vecArea, ID++, background, Point(454, 114), Point(519, 118), Point(511, 93), Point(448, 90));       //ID15;
+	pushParkingLotPoint(vecArea, ID++, background, Point(448, 90), Point(511, 93), Point(504, 73), Point(441, 70));			//ID16;
+	pushParkingLotPoint(vecArea, ID++, background, Point(441, 70), Point(504, 73), Point(495, 53), Point(436, 50));			//ID17;
+	pushParkingLotPoint(vecArea, ID++, background, Point(436, 50), Point(495, 53), Point(488, 40), Point(432, 36));			//ID18;
+	pushParkingLotPoint(vecArea, ID++, background, Point(432, 36), Point(488, 40), Point(483, 26), Point(428, 21));			//ID19;
+	pushParkingLotPoint(vecArea, ID++, background, Point(428, 21), Point(483, 26), Point(475, 11), Point(424, 4));			//ID20;
+
+	pushParkingLotPoint(vecArea, ID++, background, Point(25, 216), Point(5, 285), Point(37, 293), Point(57, 219));			 //ID21;
+	pushParkingLotPoint(vecArea, ID++, background, Point(57, 219), Point(37, 293), Point(71, 299), Point(92, 223));			 //ID22;
+	pushParkingLotPoint(vecArea, ID++, background, Point(92, 223), Point(71, 299), Point(110, 307), Point(128, 227));		 //ID23;
+	pushParkingLotPoint(vecArea, ID++, background, Point(128, 227), Point(110, 307), Point(156, 314), Point(171, 229));      //ID24;
+	pushParkingLotPoint(vecArea, ID++, background, Point(171, 229), Point(156, 314), Point(206, 319), Point(218, 232));      //ID25;
 }
 
 void decideParkingLotPoint(Mat srcFrame, Mat background, vector<ParkingLotArea>* vecArea){
@@ -577,12 +593,13 @@ float rearrangeExtent(Mat srcFrame) {
 		middleExtent = calculateExtent(srcFrame, (matCols / scale), (matCols*(scale-1) / scale), 0, matRows);
 		backExtent = calculateExtent(srcFrame, (matCols*(scale - 1) / scale), matCols, 0,  matRows);
 
-		extent = (frontExtent * 0.1) + (middleExtent * 0.8) + (backExtent * 2);	//FRONT, BACK 비율 0.9 Middle 비율 0.1
+		extent = (frontExtent * 0.2) + (middleExtent * 0.5) + (backExtent);	//FRONT, BACK 비율 0.9 Middle 비율 0.1
 
 	}
 
 	return extent;
 }
+
 void drawParkingLotPoint(Mat srcFrame, vector<ParkingLotArea>* vecArea) {
 	Scalar lineColor(0, 0, 255);
 	vector<ParkingLotArea>::iterator iter;
@@ -620,7 +637,7 @@ void showFPSFun(Mat srcFrame, int64 freq, int64 start, int64 finish) {
 	double fps = freq / double(finish - start + 1);
 	char fpsStr[20];
 	sprintf_s(fpsStr, 20, "FPS: %.1lf", fps);
-	putText(srcFrame, fpsStr, Point(400, 35), FONT_HERSHEY_SIMPLEX, 1., Scalar(0, 255, 0), 2);
+	putText(srcFrame, fpsStr, Point(400, 320), FONT_HERSHEY_SIMPLEX, 1., Scalar(0, 255, 0), 2);
 }
                                                                  
 void mouseClickFun(int event, int x, int y, int flags, void* userdata) {
@@ -630,35 +647,27 @@ void mouseClickFun(int event, int x, int y, int flags, void* userdata) {
 }
 
 //DO NOT USE FUNCTION
-Mat detectHaarcascadesCar(Mat srcFrame) {
-
-	//Copy source frame
-	Mat dstFrame;
-	srcFrame.copyTo(dstFrame);
+void detectHaarcascadesCar(Mat srcFrame) {
 
 	//Loading haarcascade xml file
-	string cascadeName = "haarcascade_cars.xml";
+	string cascadeName = "cas1.xml";
 	CascadeClassifier detector;
 
-	if (!detector.load(cascadeName)) {
+	if (!detector.load(cascadeName)) 
 		cerr << "ERROR: Could not load classifier cascade" << endl;
-		return srcFrame;
-	}
 
 	//Parameters
-	int grThr = 4;
+	int grThr = 2;
 	double scaleStep = 1.1;
-	Size minObjSize(24, 24);
-	Size maxObjSize(150, 200);
+	Size minObjSize(40, 40);
+	Size maxObjSize(200, 200);
 
 	vector<Rect> found;
 	detector.detectMultiScale(srcFrame, found, scaleStep, grThr, 0, minObjSize, maxObjSize);
 
 	// draw results (bounding boxes)
 	for (int i = 0; i<(int)found.size(); i++)
-		rectangle(dstFrame, found[i], Scalar(0, 255, 0), 2);
-
-	return dstFrame;
+		rectangle(srcFrame, found[i], Scalar(0, 255, 0), 2);
 }
 
 #endif
