@@ -32,7 +32,7 @@ private:
 
 	int ID; //주차공간 ID
 	int area;
-	float degree;
+	double degree;
 
 	int level = 0; //주차 영역 단계별 판단
 	Point parkingLotPoint;
@@ -44,7 +44,7 @@ public:
 
 	void setParkingLot(Point topLeft, Point bottomLeft, Point bottomRight, Point topRight);
 	void setID(int id);
-	void setDecideParkingLot(int level);
+	void setLevel(int level);
 	void setBackground(Mat background);
 
 	Point getTopLeft();
@@ -59,7 +59,7 @@ public:
 
 	Point getParkingLotPoint();
 	int getLevel();
-	float getDegree();
+	double getDegree();
 
 	Mat getBackground();
 
@@ -69,14 +69,14 @@ public:
 };
 
 ParkingLotArea::ParkingLotArea() {
-	setDecideParkingLot(this->level);
+	setLevel(this->level);
 }
 
 ParkingLotArea::~ParkingLotArea() {
 }
 
 
-float ParkingLotArea::getDegree() {
+double ParkingLotArea::getDegree() {
 	return this->degree;
 }
 
@@ -129,11 +129,11 @@ void ParkingLotArea::setParkingLot(Point topLeft, Point bottomLeft, Point bottom
 	//pTopRight.y = topRight.y + (bottomRight.y - topRight.y) / 3;
 
 	//Parking lot 영역 넓이
-	float widthTop;
-	float widthBottom;
-	float heightLeft;
-	float heightRight;
-	float crossLine, crossLine2;
+	double widthTop;
+	double widthBottom;
+	double heightLeft;
+	double heightRight;
+	double crossLine;
 
 	widthTop = sqrt(pow(topLeft.x - topRight.x, 2.0) + pow(topLeft.y - topRight.y, 2.0));
 	widthBottom = sqrt(pow(bottomLeft.x - bottomRight.x, 2.0) + pow(bottomLeft.y - bottomRight.y, 2.0));
@@ -143,7 +143,7 @@ void ParkingLotArea::setParkingLot(Point topLeft, Point bottomLeft, Point bottom
 	crossLine = sqrt(pow(topLeft.x - bottomRight.x, 2.0) + pow(topLeft.y - bottomRight.y, 2.0));
 
 	//삼각형 넓이 S1, S2(헤론의 공식) = 사각형 넓이 = S1+S2
-	float s0, s1, s2;
+	double s0, s1, s2;
 
 	s0 = (widthTop + heightLeft + crossLine) / 2;
 	s1 = sqrt(s0*(s0 - widthTop)*(s0 - heightLeft)*(s0 - crossLine));
@@ -235,7 +235,7 @@ int ParkingLotArea::getArea() {
 	return this->area;
 }
 
-void ParkingLotArea::setDecideParkingLot(int level) {
+void ParkingLotArea::setLevel(int level) {
 	this->level = level;
 
 	switch (this->level) {
