@@ -13,6 +13,8 @@
 
 #define FRONTFILENAME "front_side_01.avi"
 #define BACKFILENAME "back_side_01.avi"
+
+#define TESTFILENAME "test.mp4"
 #define GNUPLOTLOCATE _T("C:\\Program Files\\gnuplot\\bin\\wgnuplot.exe")
 
 #define ESC 27
@@ -37,11 +39,12 @@
 
 #define SCALETHIRD 37
 
-#define MAXEXTENT 0.25
-#define MINEXTENT 0.16
+#define FULLBOUNDARY 0.26
+#define EMPTYBOUNDARY 0.17
 
 #define BACKSIDE 10
 #define FRONTSIDE 20
+#define TEST 25
 #define NOSIDE 30
 
 using namespace std;
@@ -299,6 +302,17 @@ Mat warpingFun(Mat srcFrame, ParkingLotArea area, int side) {
 		src[3] = Point(323, 237);		    //왼쪽 아래
 		break;
 
+	case TEST:
+		src[0] = Point(396, 209);			//왼쪽 위
+		src[1] = Point(442, 210);			//오른쪽 위
+		src[2] = Point(457, 274);			//오른쪽 아래
+		src[3] = Point(402, 275);		    //왼쪽 아래
+		//src[0] = Point(386, 173);			//왼쪽 위
+		//src[1] = Point(392, 241);			//오른쪽 위
+		//src[2] = Point(449, 238);			//오른쪽 아래
+		//src[3] = Point(434, 175);		    //왼쪽 아래
+		break;
+		
 	case NOSIDE:
 		src[0] = Point(topLeft.x, topLeft.y);				//왼쪽 위
 		src[1] = Point(topRight.x, topRight.y);				//오른쪽 위
@@ -324,6 +338,7 @@ Mat warpingFun(Mat srcFrame, ParkingLotArea area, int side) {
 
 	warpPerspective(srcFrame, dstFrame, transformMat, Size2d(maxWidth, maxHeight));
 
+	
 	return dstFrame;
 }
 
@@ -382,7 +397,7 @@ void makeLabeling(Mat srcFrame, Mat foreground) {
 		int x = centroids.at<int>(i, 0); 
 		int y = centroids.at<int>(i, 1);
 
-		circle(srcFrame, Point(x, y), 5, Scalar(255, 0, 0), 1);
+		//circle(srcFrame, Point(x, y), 5, Scalar(255, 0, 0), 1);
 
 		//cout << area << endl;
 		rectangle(srcFrame, Point(left, top), Point(left + width, top + height),
@@ -492,11 +507,6 @@ void setParkingLotPoint(vector<ParkingLotArea>* vecArea, Mat background, int sid
 		pushParkingLotPoint(vecArea, ID++, background, Point(432, 34), Point(489, 39), Point(483, 23), Point(428, 20), side);			//ID26;
 		pushParkingLotPoint(vecArea, ID++, background, Point(428, 20), Point(483, 23), Point(475, 7), Point(424, 1), side);				//ID27;
 
-
-
-		
-		
-
 	}
 }
 
@@ -553,7 +563,7 @@ void decideParkingLotPoint(Mat srcFrame, Mat background, vector<ParkingLotArea>*
 		
 	
 		//주차장 영역의 넘을 경우 => FULL
-		if (extent <= iter->getArea()*MINEXTENT) {
+		if (extent <= iter->getArea()*EMPTYBOUNDARY) {
 			level = EMPTY;
 
 			if (extent) { //Extent가 0이 아닐경우에만 
@@ -567,7 +577,7 @@ void decideParkingLotPoint(Mat srcFrame, Mat background, vector<ParkingLotArea>*
 
 		}else if (iter->getDegree() < 10) {	 // 기울기가 20도 미만일 경우 Penalty X
 
-			if (extent <= iter->getArea()*MAXEXTENT)
+			if (extent <= iter->getArea()*FULLBOUNDARY)
 				level = AMBIGUOUS;
 			else
 				level = FULL;
@@ -575,9 +585,9 @@ void decideParkingLotPoint(Mat srcFrame, Mat background, vector<ParkingLotArea>*
 		}else {								// 기울기가 20도 이상일 경우 Penalty 부여
 			extent = rearrangeExtent(foreWarpFrame);
 
-			if (extent <= iter->getArea()*MINEXTENT) 
+			if (extent <= iter->getArea()*EMPTYBOUNDARY)
 				level = EMPTY;
-			else if (extent <= iter->getArea()*MAXEXTENT)
+			else if (extent <= iter->getArea()*FULLBOUNDARY)
 				level = AMBIGUOUS;
 			else
 				level = FULL;
@@ -585,8 +595,8 @@ void decideParkingLotPoint(Mat srcFrame, Mat background, vector<ParkingLotArea>*
 
 		cout << "AREA(ID) :   " << iter->getID()
 			<< "\tAREA :  " << iter->getArea()
-			<< "\tAREA(MAX) :  " << iter->getArea()*MAXEXTENT
-			<< "\tAREA(MIN) :  " << iter->getArea()*MINEXTENT
+			<< "\tAREA(MAX) :  " << iter->getArea()*FULLBOUNDARY
+			<< "\tAREA(MIN) :  " << iter->getArea()*EMPTYBOUNDARY
 			<< "\tEXTENT :   " << extent
 			<< "\tANGLE :  " << iter->getDegree() << endl;
 

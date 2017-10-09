@@ -23,9 +23,24 @@ int main(void) {
 		exit(EXIT_FAILURE);
 	}
 
+	/*FILE *fp = fopen("C:\\Users\\택기\\Desktop\\1.txt", "wt");
+	if (fp) {
+		fprintf(fp, "%d\t%d\t%.2f\n", min, max, PvalueProbablity);
+		fclose(fp);
+	}*/
 	//GNU plot
-	//CpGnuplotU plot(GNUPLOTLOCATE);
-	//plot.cmd(_T("splot [x=-3:3] [y=-3:3] sin(x) * cos(y)"));
+	CpGnuplotU plot(GNUPLOTLOCATE);
+
+	/*plot.cmd(_T("set grid"));
+	plot.cmd(_T("set parametric"));
+	plot.cmd(_T("set dgrid3d gauss"));*/
+	plot.cmd(_T("set title \"각도에 따른 침범하는 영역 비율\""));   // 파일 불러오기
+	plot.cmd(_T("set xlabel \"각도(degree) \""));   
+	plot.cmd(_T("set ylabel \"영역 비율(percent)\""));   // y축 최대값 * 100
+	plot.cmd(_T("plot [x=0:90] [y=0:100] 'C:\\Users\\택기\\Desktop\\1.txt' with lines"));
+	
+	//plot.cmd(_T("splot 'D:\\test\\1.txt' with lines"));   // 파일 불러오기
+
 
 	//Background extraction and preprocessing
 
@@ -62,6 +77,26 @@ int main(void) {
 
 	//주차 공간 추출(수동)
 
+	////// -------------------TEST-----------------------
+	//VideoCapture test_video(TESTFILENAME);
+	//// -------------- BACKSIDE -----------------
+	//Mat back_frame, back_background, back_mask;
+	//vector<ParkingLotArea> vec_area_back; //vector 영역
+
+	//test_video >> back_background;
+	////resize(back_background, back_background,
+	////	Size(back_background.cols / RESIZE, back_background.rows / RESIZE), 0, 0, CV_INTER_NN);
+
+	////setParkingLotPoint(&vec_area_back, back_background, BACKSIDE);
+	//int ID = 0;	//ID 0부터 시작 
+	////pushParkingLotPoint(&vec_area_back, 0, back_background, Point(396, 209), Point(402, 275), Point(457, 274), Point(442, 210), TEST);
+	//pushParkingLotPoint(&vec_area_back, 0, back_background, Point(395, 235), Point(399, 303), Point(456, 302), Point(443, 231), TEST);
+	////pushParkingLotPoint(&vec_area_back, 0, back_background, Point(386, 173), Point(392, 241), Point(449, 238), Point(434, 175), TEST);
+	//
+	//Ptr<BackgroundSubtractor> p_mog2_back;
+	//p_mog2_back = createBackgroundSubtractorMOG2(500, 250, true);
+	//// -----------------------------------------
+	//// -----------------------------------------------
 	int speed = 0;
 
 	//FPS 측정
@@ -72,7 +107,21 @@ int main(void) {
 	while (true) {
 		//영상처리 시작
 		QueryPerformanceCounter((_LARGE_INTEGER*)&start);
+		//--------- TEST -------------
+		//test_video >> back_frame;
+		//////resize(back_frame, back_frame,
+		////	Size(back_frame.cols / RESIZE, back_frame.rows / RESIZE), 0, 0, CV_INTER_NN);	//BACK
+		//													
+		//Mat back_foreground = diffFrameFun2(back_frame, p_mog2_back);
+		//back_foreground = maskingFun(back_frame, back_foreground, true);
 
+		////decideParkingLotPoint(back_frame, back_foreground, &vec_area_back);				// 주차공간 결정(BACK)
+		//vec_area_back[0].setLevel(1);
+		//drawParkingLotPoint(back_frame, &vec_area_back);								// 주차공간 그리기(BACK)
+
+		//imshow("TEST", back_frame);
+		//imshow("BACK", vec_area_back[0].getBackground());
+		//setMouseCallback("TEST", mouseClickFun, NULL);
 		//--------------MAIN-------------------
 		front_video >> front_frame;							//Frame 추출
 		back_video >> back_frame;
@@ -82,13 +131,13 @@ int main(void) {
 			break;
 		}
 
-		//------------- SPEED ------------------
+		////------------- SPEED ------------------
 		//Speed of Video
 		if (++speed % 10)
 			continue;
 
-		//waitKey(30);		//FPS 조정(25- 27)
-		//--------------------------------------
+		//waitKey(35);		//FPS 조정(25- 27)
+		////--------------------------------------
 
 
 		//------------- RESIZE ------------------
@@ -128,11 +177,11 @@ int main(void) {
 
 		//Processing time (FPS)
 		QueryPerformanceCounter((_LARGE_INTEGER*)&finish);
-		showFPSFun(front_frame, freq, start, finish);
+		//showFPSFun(front_frame, freq, start, finish);
 
 		imshow("FORNT_PMS", front_frame);
 		imshow("BACK_PMS", back_frame);
-		//imshow("FRONT_FOREGROUND", front_foreground);
+		imshow("FRONT_FOREGROUND", front_foreground);
 
 		//Mouse Callback Function
 		setMouseCallback("FORNT_PMS", mouseClickFun, NULL);
